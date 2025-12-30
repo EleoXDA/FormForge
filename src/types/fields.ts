@@ -51,3 +51,102 @@ export interface ValidationRules {
   pattern?: string
   patternMessage?: string
 }
+
+/**
+ * Text input field configuration.
+ */
+export interface TextField extends BaseField {
+  type: 'text'
+  validation?: Pick<ValidationRules, 'minLength' | 'maxLength' | 'pattern' | 'patternMessage'>
+}
+
+/**
+ * Email input field configuration.
+ */
+export interface EmailField extends BaseField {
+  type: 'email'
+  validation?: Pick<ValidationRules, 'pattern' | 'patternMessage'>
+}
+
+/**
+ * Number input field configuration.
+ */
+export interface NumberField extends BaseField {
+  type: 'number'
+  validation?: Pick<ValidationRules, 'min' | 'max'>
+  step?: number
+}
+
+/**
+ * Textarea field configuration.
+ */
+export interface TextareaField extends BaseField {
+  type: 'textarea'
+  rows?: number
+  validation?: Pick<ValidationRules, 'minLength' | 'maxLength'>
+}
+
+/**
+ * Single-select dropdown field configuration.
+ */
+export interface SelectField extends BaseField {
+  type: 'select'
+  options: FieldOption[]
+}
+
+/**
+ * Multi-select dropdown field configuration.
+ */
+export interface MultiselectField extends BaseField {
+  type: 'multiselect'
+  options: FieldOption[]
+}
+
+/**
+ * Checkbox field configuration (single or group).
+ */
+export interface CheckboxField extends BaseField {
+  type: 'checkbox'
+  options?: FieldOption[]
+}
+
+/**
+ * Radio button group field configuration.
+ */
+export interface RadioField extends BaseField {
+  type: 'radio'
+  options: FieldOption[]
+}
+
+/**
+ * Date picker field configuration.
+ */
+export interface DateField extends BaseField {
+  type: 'date'
+  minDate?: string
+  maxDate?: string
+}
+
+/**
+ * Phone number field configuration.
+ */
+export interface PhoneField extends BaseField {
+  type: 'phone'
+  validation?: Pick<ValidationRules, 'pattern' | 'patternMessage'>
+}
+
+/**
+ * Discriminated union of all field types.
+ * The `type` property acts as the discriminant.
+ */
+export type FormField =
+  | TextField
+  | EmailField
+  | NumberField
+  | TextareaField
+  | SelectField
+  | MultiselectField
+  | CheckboxField
+  | RadioField
+  | DateField
+  | PhoneField
