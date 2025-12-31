@@ -3,6 +3,8 @@ import { onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFormEditorStore } from '@/stores'
 import { BuilderLayout, FieldPalette, BuilderCanvas } from '@/components/builder'
+import { PropertyInspector } from '@/components/builder/inspector'
+import type { FormField } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,6 +33,12 @@ function handleRedo() {
 
 function handlePreview() {
   router.push(`/preview/${formId.value}`)
+}
+
+function handleFieldUpdate(updates: Partial<FormField>) {
+  if (store.selectedFieldId) {
+    store.updateField(store.selectedFieldId, updates)
+  }
 }
 
 function handleSave() {
@@ -100,21 +108,16 @@ function handleSave() {
       <BuilderCanvas />
     </template>
 
-    <!-- Inspector (right sidebar) - placeholder for now -->
+<!-- Inspector (right sidebar) -->
     <template #inspector>
-      <div v-if="store.selectedField" class="q-pa-sm">
-        <div class="text-subtitle2 q-mb-md">
-          Editing: {{ store.selectedField.label || 'Untitled' }}
-        </div>
-        <div class="text-caption text-grey">
-          Property inspector coming next...
-        </div>
-        <pre class="text-caption q-mt-md">{{ JSON.stringify(store.selectedField, null, 2) }}</pre>
-      </div>
+      <PropertyInspector
+        v-if="store.selectedField"
+        :field="store.selectedField"
+        @update:field="handleFieldUpdate"
+      />
       <div v-else class="text-center text-grey q-pa-lg">
         <q-icon name="touch_app" size="48px" color="grey-4" />
         <p class="q-mt-md">Select a field to edit its properties</p>
       </div>
-    </template>
-  </BuilderLayout>
+    </template>  </BuilderLayout>
 </template>

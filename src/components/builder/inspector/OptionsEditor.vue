@@ -15,25 +15,21 @@ const emit = defineEmits<{
 }>()
 
 // Local copy for draggable binding
-const localOptions = ref<FieldOption[]>([...props.options])
+const localOptions = ref<FieldOption[]>(props.options.map((option) => ({ ...option })))
 
 // Sync from props when they change externally
 watch(
   () => props.options,
   (newOptions) => {
-    localOptions.value = [...newOptions]
+    localOptions.value = newOptions.map((option) => ({ ...option }))
   },
   { deep: true }
 )
 
-// Emit changes when local options change
-watch(
-  localOptions,
-  (newOptions) => {
-    emit('update:options', [...newOptions])
-  },
-  { deep: true }
-)
+function emitOptions() {
+  emit('update:options', localOptions.value.map((o) => ({ ...o })))
+}
+
 
 function addOption() {
   const index = localOptions.value.length + 1
@@ -41,17 +37,23 @@ function addOption() {
     value: `option${index}`,
     label: `Option ${index}`
   })
+    emitOptions()
 }
 
 function removeOption(index: number) {
   localOptions.value.splice(index, 1)
+    emitOptions()
+
 }
 
 function updateOptionValue(index: number, value: string) {
   const option = localOptions.value[index]
   if (option) {
     option.value = value
+      emitOptions()
+
   }
+  
 }
 
 function updateOptionLabel(index: number, label: string) {
@@ -62,6 +64,8 @@ function updateOptionLabel(index: number, label: string) {
     if (!option.value) {
       option.value = label.toLowerCase().replace(/[^a-z0-9]+/g, '_')
     }
+      emitOptions()
+
   }
 }
 </script>
@@ -74,6 +78,7 @@ function updateOptionLabel(index: number, label: string) {
       handle=".option-handle"
       animation="150"
       class="options-list"
+      @end="emitOptions"
     >
       <template #item="{ element, index }">
         <div class="option-row">

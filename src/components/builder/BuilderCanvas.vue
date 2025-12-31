@@ -15,9 +15,18 @@ const store = useFormEditorStore()
 const localFields = computed({
   get: () => store.schema.fields,
   set: (newFields: FormField[]) => {
+    const currentFields = store.schema.fields
+
+    const sameOrder =
+      newFields.length === currentFields.length &&
+      newFields.every((f, index) => f.id === currentFields[index]?.id)
+
+    if (sameOrder) return
+
     store.setFields(newFields)
   }
 })
+
 
 const isEmpty = computed(() => store.isEmpty)
 const selectedFieldId = computed(() => store.selectedFieldId)
