@@ -228,6 +228,15 @@ onMounted(loadForm)
       <q-separator vertical inset class="q-mx-sm" />
       <q-btn flat dense icon="visibility" label="Preview" @click="handlePreview" />
       <q-btn
+        flat
+        dense
+        icon="list_alt"
+        label="Responses"
+        :to="`/forms/${formId}/submissions`"
+      >
+        <q-tooltip>View form submissions</q-tooltip>
+      </q-btn>
+      <q-btn
         dense
         color="primary"
         icon="save"
