@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useFormEditorStore } from '@/stores'
 import { formsService, isSupabaseConfigured } from '@/services'
-import { BuilderLayout, FieldPalette, BuilderCanvas } from '@/components/builder'
+import { BuilderLayout, FieldPalette, BuilderCanvas, LivePreview } from '@/components/builder'
 import { PropertyInspector } from '@/components/builder/inspector'
 import { useBuilderKeyboard } from '@/composables'
 import type { FormField } from '@/types'
@@ -153,21 +153,10 @@ onMounted(loadForm)
     <!-- Title slot -->
     <template #title>
       <div class="flex items-center">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          class="q-mr-sm"
-          to="/forms"
-        />
+        <q-btn flat round dense icon="arrow_back" class="q-mr-sm" to="/forms" />
         <span>{{ formTitle }}</span>
         <q-badge v-if="isDirty" color="orange" class="q-ml-sm">Unsaved</q-badge>
-        <q-badge
-          v-if="store.meta?.status === 'published'"
-          color="positive"
-          class="q-ml-sm"
-        >
+        <q-badge v-if="store.meta?.status === 'published'" color="positive" class="q-ml-sm">
           Published
         </q-badge>
       </div>
@@ -175,34 +164,14 @@ onMounted(loadForm)
 
     <!-- Toolbar actions -->
     <template #toolbar-actions>
-      <q-btn
-        flat
-        round
-        dense
-        icon="undo"
-        :disable="!canUndo"
-        @click="handleUndo"
-      >
+      <q-btn flat round dense icon="undo" :disable="!canUndo" @click="handleUndo">
         <q-tooltip>Undo (Ctrl+Z)</q-tooltip>
       </q-btn>
-      <q-btn
-        flat
-        round
-        dense
-        icon="redo"
-        :disable="!canRedo"
-        @click="handleRedo"
-      >
+      <q-btn flat round dense icon="redo" :disable="!canRedo" @click="handleRedo">
         <q-tooltip>Redo (Ctrl+Y)</q-tooltip>
       </q-btn>
       <q-separator vertical inset class="q-mx-sm" />
-      <q-btn
-        flat
-        dense
-        icon="visibility"
-        label="Preview"
-        @click="handlePreview"
-      />
+      <q-btn flat dense icon="visibility" label="Preview" @click="handlePreview" />
       <q-btn
         dense
         color="primary"
@@ -265,6 +234,10 @@ onMounted(loadForm)
         <q-icon name="touch_app" size="48px" color="grey-4" />
         <p class="q-mt-md">Select a field to edit its properties</p>
       </div>
+    </template>
+    <!-- Live Preview (right sidebar alternative) -->
+    <template #preview>
+      <LivePreview :schema="store.schema" :form-title="store.meta?.title" />
     </template>
   </BuilderLayout>
 </template>
