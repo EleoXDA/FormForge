@@ -5,6 +5,7 @@ import { useFormEditorStore } from '@/stores'
 import { BuilderLayout, FieldPalette, BuilderCanvas } from '@/components/builder'
 import { PropertyInspector } from '@/components/builder/inspector'
 import type { FormField } from '@/types'
+import { useBuilderKeyboard } from '@/composables'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +16,9 @@ const formTitle = computed(() => store.meta?.title || 'Untitled Form')
 const isDirty = computed(() => store.isDirty)
 const canUndo = computed(() => store.canUndo)
 const canRedo = computed(() => store.canRedo)
+
+// Enable keyboard shortcuts
+useBuilderKeyboard()
 
 onMounted(() => {
   // If no form is loaded, create a new one
