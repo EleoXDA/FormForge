@@ -4,15 +4,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useFormEditorStore } from '@/stores'
 import { formsService, isSupabaseConfigured } from '@/services'
-import {
-  BuilderLayout,
-  FieldPalette,
-  BuilderCanvas,
-  LivePreview,
-  FormSettingsEditor
+import { 
+  BuilderLayout, 
+  FieldPalette, 
+  BuilderCanvas, 
+  LivePreview, 
+  FormSettingsEditor,
+  SaveStatusIndicator 
 } from '@/components/builder'
 import { PropertyInspector } from '@/components/builder/inspector'
-import { useBuilderKeyboard } from '@/composables'
+import { useBuilderKeyboard, useAutoSave } from '@/composables'
 import type { FormField, FormSchema, FormMeta } from '@/types'
 
 const route = useRoute()
@@ -33,6 +34,33 @@ const isLoading = ref(false)
 const isSaving = ref(false)
 const loadError = ref<string | null>(null)
 const isConfigured = isSupabaseConfigured()
+
+// Auto-save setup
+const autoSaveEnabled = computed(() => isConfigured && !!store.meta?.id)
+
+const { status: saveStatus, lastSavedAt, error: saveError, trigger: triggerAutoSave } = useAutoSave({
+  debounceMs: 3000,
+  enabled: autoSaveEnabled,
+  onSave: async () => {
+    if (!store.meta?.id) return
+    const result = await formsService.saveVersion(store.meta.id, store.schema)
+    if (!result.success) {
+      throw new Error(result.error)
+    }
+    store.markAsSaved()
+  }
+})
+
+// Watch for schema changes to trigger auto-save
+watch(
+  () => store.schema,
+  () => {
+    if (store.isDirty) {
+      triggerAutoSave()
+    }
+  },
+  { deep: true }
+)
 
 // Settings dialog state
 const showSettingsDialog = ref(false)
@@ -184,6 +212,13 @@ onMounted(loadForm)
 
     <!-- Toolbar actions -->
     <template #toolbar-actions>
+      <SaveStatusIndicator
+        v-if="isConfigured"
+        :status="saveStatus"
+        :last-saved-at="lastSavedAt"
+        :error="saveError"
+        class="q-mr-sm"
+      />
       <q-btn flat round dense icon="undo" :disable="!canUndo" @click="handleUndo">
         <q-tooltip>Undo (Ctrl+Z)</q-tooltip>
       </q-btn>
@@ -197,8 +232,8 @@ onMounted(loadForm)
         color="primary"
         icon="save"
         label="Save"
-        :loading="isSaving"
-        :disable="!isDirty"
+        :loading="isSaving || saveStatus === 'saving'"
+        :disable="!isDirty && saveStatus !== 'error'"
         class="q-ml-sm"
         @click="handleSave"
       />
