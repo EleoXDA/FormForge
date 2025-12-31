@@ -16,7 +16,9 @@ export default [
         MouseEvent: 'readonly',
         Event: 'readonly',
         window: 'readonly',
-        document: 'readonly'
+        document: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly'
       },
       parserOptions: {
         parser: tseslint.parser

@@ -16,11 +16,16 @@ const routes: RouteRecordRaw[] = [
     name: 'builder',
     component: () => import('@/views/BuilderView.vue')
   },
-//   {
-//     path: '/preview/:id',
-//     name: 'preview',
-//     component: () => import('@/views/PreviewView.vue')
-//   },
+  {
+    path: '/preview/:id',
+    name: 'preview',
+    component: () => import('@/views/Preview.vue')
+  },
+  {
+    path: '/forms/:id/submissions',
+    name: 'submissions',
+    component: () => import('@/views/SubmissionsView.vue')
+  },
   {
     path: '/f/:slug',
     name: 'public-form',
