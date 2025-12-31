@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CheckboxField } from '@/types'
+import { computed } from 'vue'
 
 interface Props {
   field: CheckboxField
@@ -22,11 +23,6 @@ function onGroupUpdate(value: string[]) {
   emit('update:modelValue', value)
 }
 </script>
-
-<script lang="ts">
-import { computed } from 'vue'
-</script>
-
 <template>
   <div>
     <div v-if="props.field.label" class="text-subtitle2 q-mb-xs">{{ props.field.label }}</div>
