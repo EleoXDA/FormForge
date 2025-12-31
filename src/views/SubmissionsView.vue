@@ -50,11 +50,12 @@ const tableColumns = computed(() => {
 
   // Add columns for each field in the schema
   if (formSchema.value) {
-    for (const field of formSchema.value.fields.slice(0, 5)) { // Limit to first 5 fields
+    for (const field of formSchema.value.fields.slice(0, 5)) {
+      // Limit to first 5 fields
       columns.push({
         name: field.name,
         label: field.label || field.name,
-        field: (row: FormSubmission) => formatValue(row.answers[field.name], field),
+        field: (row: FormSubmission) => formatValue(row.answers[field.name]),
         align: 'left',
         sortable: false
       })
@@ -84,7 +85,7 @@ async function loadForm() {
   }
 
   const result = await formsService.getFormById(formId.value)
-  
+
   if (result.success) {
     formMeta.value = result.data.meta
     formSchema.value = result.data.schema
@@ -156,30 +157,30 @@ function exportToCsv() {
   if (!formSchema.value || submissions.value.length === 0) return
 
   const fields = formSchema.value.fields
-  const headers = ['Submitted At', ...fields.map(f => f.label || f.name)]
-  
-  const rows = submissions.value.map(sub => {
+  const headers = ['Submitted At', ...fields.map((f) => f.label || f.name)]
+
+  const rows = submissions.value.map((sub) => {
     const values = [
       new Date(sub.submittedAt).toISOString(),
-      ...fields.map(f => {
+      ...fields.map((f) => {
         const val = sub.answers[f.name]
         if (Array.isArray(val)) return val.join('; ')
         if (val === null || val === undefined) return ''
         return String(val)
       })
     ]
-    return values.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+    return values.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
   })
 
   const csv = [headers.join(','), ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
-  
+
   const link = document.createElement('a')
   link.href = url
   link.download = `${formMeta.value?.title || 'form'}-submissions.csv`
   link.click()
-  
+
   URL.revokeObjectURL(url)
 }
 
@@ -198,11 +199,11 @@ function formatDate(dateString: string): string {
 /**
  * Format a value for display in the table
  */
-function formatValue(value: unknown, field: FormField): string {
-  if (value === null || value === undefined) return '—'
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) return '-'
   if (Array.isArray(value)) return value.join(', ')
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  
+
   const str = String(value)
   return str.length > 50 ? str.slice(0, 50) + '...' : str
 }
@@ -212,10 +213,10 @@ function formatValue(value: unknown, field: FormField): string {
  */
 function getValueLabel(field: FormField, value: unknown): string {
   if ('options' in field && field.options) {
-    const option = field.options.find(o => o.value === value)
+    const option = field.options.find((o) => o.value === value)
     if (option) return option.label
   }
-  return formatValue(value, field)
+  return formatValue(value)
 }
 
 // Watch for form ID changes
@@ -235,17 +236,10 @@ onMounted(async () => {
     <div class="submissions-page">
       <!-- Header -->
       <div class="row items-center q-mb-lg">
-        <q-btn
-          flat
-          round
-          icon="arrow_back"
-          @click="router.push(`/builder/${formId}`)"
-        />
+        <q-btn flat round icon="arrow_back" @click="router.push(`/builder/${formId}`)" />
         <div class="q-ml-md">
           <h1 class="text-h5 q-mb-none">{{ formMeta?.title || 'Form' }} Submissions</h1>
-          <p class="text-caption text-grey q-mb-none">
-            {{ totalCount }} total responses
-          </p>
+          <p class="text-caption text-grey q-mb-none">{{ totalCount }} total responses</p>
         </div>
         <q-space />
         <q-btn
@@ -279,9 +273,7 @@ onMounted(async () => {
       <q-card v-else-if="submissions.length === 0" flat bordered class="text-center q-pa-xl">
         <q-icon name="inbox" size="64px" color="grey-4" />
         <h3 class="text-h6 text-grey-6 q-mt-md q-mb-sm">No Submissions Yet</h3>
-        <p class="text-body2 text-grey">
-          Share your form to start collecting responses
-        </p>
+        <p class="text-body2 text-grey">Share your form to start collecting responses</p>
         <q-btn
           color="primary"
           label="Go to Form Builder"
@@ -305,13 +297,7 @@ onMounted(async () => {
         <!-- Actions column -->
         <template #body-cell-actions="props">
           <q-td :props="props">
-            <q-btn
-              flat
-              round
-              dense
-              icon="visibility"
-              @click="viewSubmission(props.row)"
-            >
+            <q-btn flat round dense icon="visibility" @click="viewSubmission(props.row)">
               <q-tooltip>View details</q-tooltip>
             </q-btn>
           </q-td>
@@ -340,22 +326,16 @@ onMounted(async () => {
           <q-separator class="q-my-md" />
 
           <!-- Field values -->
-          <div
-            v-for="field in formSchema?.fields"
-            :key="field.id"
-            class="q-mb-md"
-          >
+          <div v-for="field in formSchema?.fields" :key="field.id" class="q-mb-md">
             <div class="text-caption text-grey">{{ field.label || field.name }}</div>
             <div class="text-body1">
-              {{ getValueLabel(field, selectedSubmission.answers[field.name]) || '—' }}
+              {{ getValueLabel(field, selectedSubmission.answers[field.name]) || '-' }}
             </div>
           </div>
 
           <!-- Submission ID -->
           <q-separator class="q-my-md" />
-          <div class="text-caption text-grey">
-            Submission ID: {{ selectedSubmission.id }}
-          </div>
+          <div class="text-caption text-grey">Submission ID: {{ selectedSubmission.id }}</div>
         </q-card-section>
       </q-card>
     </q-dialog>
