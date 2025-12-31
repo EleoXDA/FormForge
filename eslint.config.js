@@ -13,6 +13,7 @@ export default [
     languageOptions: {
       globals: {
         console: 'readonly',
+        MouseEvent: 'readonly',
         Event: 'readonly',
         window: 'readonly',
         document: 'readonly'
