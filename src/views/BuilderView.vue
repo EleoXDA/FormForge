@@ -4,10 +4,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useFormEditorStore } from '@/stores'
 import { formsService, isSupabaseConfigured } from '@/services'
-import { BuilderLayout, FieldPalette, BuilderCanvas, LivePreview } from '@/components/builder'
+import {
+  BuilderLayout,
+  FieldPalette,
+  BuilderCanvas,
+  LivePreview,
+  FormSettingsEditor
+} from '@/components/builder'
 import { PropertyInspector } from '@/components/builder/inspector'
 import { useBuilderKeyboard } from '@/composables'
-import type { FormField } from '@/types'
+import type { FormField, FormSchema, FormMeta } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,6 +33,9 @@ const isLoading = ref(false)
 const isSaving = ref(false)
 const loadError = ref<string | null>(null)
 const isConfigured = isSupabaseConfigured()
+
+// Settings dialog state
+const showSettingsDialog = ref(false)
 
 /**
  * Load form from database or create new
@@ -136,6 +145,17 @@ function handlePreview() {
   router.push(`/preview/${formId.value}`)
 }
 
+function handleSettingsUpdate(updates: Partial<FormSchema['settings']>) {
+  store.updateSettings(updates)
+}
+
+function handleMetaUpdate(updates: Partial<FormMeta>) {
+  if (store.meta) {
+    Object.assign(store.meta, updates)
+    store.isDirty = true
+  }
+}
+
 function handleFieldUpdate(updates: Partial<FormField>) {
   if (store.selectedFieldId) {
     store.updateField(store.selectedFieldId, updates)
@@ -182,6 +202,9 @@ onMounted(loadForm)
         class="q-ml-sm"
         @click="handleSave"
       />
+      <q-btn flat dense icon="settings" class="q-ml-sm" @click="showSettingsDialog = true">
+        <q-tooltip>Form Settings</q-tooltip>
+      </q-btn>
       <q-btn
         v-if="store.meta?.status !== 'published'"
         dense
@@ -239,5 +262,32 @@ onMounted(loadForm)
     <template #preview>
       <LivePreview :schema="store.schema" :form-title="store.meta?.title" />
     </template>
+    <!-- Settings Dialog -->
+    <q-dialog v-model="showSettingsDialog">
+      <q-card style="width: 500px; max-width: 90vw">
+        <q-card-section class="row items-center">
+          <div class="text-h6">Form Settings</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="showSettingsDialog = false" />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="scroll" style="max-height: 70vh">
+          <FormSettingsEditor
+            :settings="store.schema.settings"
+            :meta="store.meta"
+            @update:settings="handleSettingsUpdate"
+            @update:meta="handleMetaUpdate"
+          />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" @click="showSettingsDialog = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </BuilderLayout>
 </template>
