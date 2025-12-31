@@ -77,8 +77,8 @@ function handlePreviewSubmit(values: Record<string, unknown>) {
             {{ props.formTitle }}
           </h2>
           <SchemaRenderer
-            :schema="props.schema"
             v-model="previewValues"
+            :schema="props.schema"
             @submit="handlePreviewSubmit"
           />
         </div>
