@@ -5,10 +5,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * These are validated at runtime to provide helpful error messages.
  */
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+// alert(`URL=${String(supabaseUrl)} KEY=${String(supabaseKey).slice(0, 14)}`)
 
 // Validate that environment variables are configured
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseKey) {
   console.error(
     'Missing Supabase environment variables. ' +
     'Please copy .env.example to .env.local and fill in your Supabase credentials.'
@@ -26,7 +27,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
  */
 export const supabase: SupabaseClient = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
+  supabaseKey || 'placeholder-key',
   {
     auth: {
       // Persist session in localStorage
@@ -42,5 +43,5 @@ export const supabase: SupabaseClient = createClient(
  * Useful for showing setup instructions in development.
  */
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('placeholder'))
+  return Boolean(supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder'))
 }

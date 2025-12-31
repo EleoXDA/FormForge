@@ -15,8 +15,8 @@ After creating your project, copy your API credentials:
 2. Copy the **Project URL** and **anon/public** key
 3. Add them to your `.env.local` file:
 ```bash
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_URL=https://project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=key
 ```
 
 ## Tables
