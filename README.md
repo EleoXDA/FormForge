@@ -2,7 +2,7 @@
 
 > A schema-driven, low-code form builder built with Vue 3, TypeScript, and Quasar.
 
-[![CI](https://github.com/YOUR_USERNAME/formforge/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/formforge/actions/workflows/ci.yml)
+[![CI](https://github.com/EleoXDA/formforge/actions/workflows/ci.yml/badge.svg)](https://github.com/EleoXDA/formforge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Highlights
