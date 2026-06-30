@@ -135,7 +135,7 @@ onMounted(loadPreview)
       <!-- Form preview -->
       <q-card v-else class="q-pa-lg" style="max-width: 650px">
         <h1 v-if="formTitle" class="text-h5 q-mb-md">{{ formTitle }}</h1>
-        <SchemaRenderer v-model="formValues" :schema="schema" @submit="handleSubmit" />
+        <SchemaRenderer v-model="formValues" :schema="schema" :form-id="store.meta?.id" @submit="handleSubmit" />
       </q-card>
     </div>
   </q-page>

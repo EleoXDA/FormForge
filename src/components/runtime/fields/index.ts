@@ -11,6 +11,7 @@ import CheckboxFieldRenderer from './CheckboxFieldRenderer.vue'
 import RadioFieldRenderer from './RadioFieldRenderer.vue'
 import DateFieldRenderer from './DateFieldRenderer.vue'
 import PhoneFieldRenderer from './PhoneFieldRenderer.vue'
+import FileFieldRenderer from './FileFieldRenderer.vue'
 
 /**
  * Maps field type strings to their renderer components.
@@ -26,7 +27,8 @@ export const fieldComponentMap: Record<FieldType, Component> = {
   checkbox: CheckboxFieldRenderer,
   radio: RadioFieldRenderer,
   date: DateFieldRenderer,
-  phone: PhoneFieldRenderer
+  phone: PhoneFieldRenderer,
+  file: FileFieldRenderer
 }
 
 export {
@@ -39,5 +41,6 @@ export {
   CheckboxFieldRenderer,
   RadioFieldRenderer,
   DateFieldRenderer,
-  PhoneFieldRenderer
+  PhoneFieldRenderer,
+  FileFieldRenderer
 }

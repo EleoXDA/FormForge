@@ -47,6 +47,8 @@ export function createDefaultField(type: FieldType): FormField {
       return { ...base, type: 'date' }
     case 'phone':
       return { ...base, type: 'phone', label: 'Phone' }
+    case 'file':
+      return { ...base, type: 'file', label: 'File Upload', maxSizeMb: 10 }
     default:
       return { ...base, type: 'text' }
   }

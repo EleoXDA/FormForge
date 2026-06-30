@@ -29,7 +29,8 @@ const fieldTypes: FieldTypeConfig[] = [
   { type: 'radio', label: 'Radio Buttons', icon: 'radio_button_checked', category: 'choice' },
   { type: 'checkbox', label: 'Checkbox', icon: 'check_box', category: 'choice' },
   // Special inputs
-  { type: 'date', label: 'Date Picker', icon: 'event', category: 'special' }
+  { type: 'date', label: 'Date Picker', icon: 'event', category: 'special' },
+  { type: 'file', label: 'File Upload', icon: 'attach_file', category: 'special' }
 ]
 
 // Group fields by category for display

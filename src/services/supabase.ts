@@ -38,6 +38,12 @@ export const supabase: SupabaseClient = createClient(
 )
 
 /**
+ * The configured Supabase project URL (empty string when not configured).
+ * Used to build direct Storage endpoints (e.g. signed upload URLs).
+ */
+export const SUPABASE_URL: string = supabaseUrl ?? ''
+
+/**
  * Check if Supabase is properly configured.
  * Useful for showing setup instructions in development.
  */

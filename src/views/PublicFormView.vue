@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { formsService, isSupabaseConfigured } from '@/services'
 import { SchemaRenderer } from '@/components/runtime'
 import { isMultiStep } from '@/utils'
 import type { FormMeta, FormSchema } from '@/types'
 
 const route = useRoute()
+const router = useRouter()
 
 const slug = computed(() => route.params['slug'] as string)
 const version = computed(() => {
@@ -43,6 +44,24 @@ const progressKey = computed(() =>
     ? `formforge:progress:${slug.value}:${version.value ?? 'latest'}`
     : undefined
 )
+
+/**
+ * 1-based wizard step taken from the `?step=` query param (deep linking).
+ */
+const initialStep = computed(() => {
+  const raw = route.query['step']
+  const value = Array.isArray(raw) ? raw[0] : raw
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= 1 ? parsed : undefined
+})
+
+/**
+ * Reflect the active wizard step in the URL so it can be deep-linked/shared.
+ */
+function onStepChange(step: number) {
+  if (String(step) === route.query['step']) return
+  void router.replace({ query: { ...route.query, step: String(step) } }).catch(() => {})
+}
 
 /**
  * Load the published form identified by the public slug.
@@ -160,6 +179,9 @@ onMounted(loadForm)
           :schema="schema"
           :disabled="isSubmitting"
           :storage-key="progressKey"
+          :initial-step="initialStep"
+          :form-id="meta?.id"
+          @step-change="onStepChange"
           @submit="handleSubmit"
         />
       </q-card>

@@ -12,7 +12,8 @@ export const FIELD_TYPES = {
   CHECKBOX: 'checkbox',
   RADIO: 'radio',
   DATE: 'date',
-  PHONE: 'phone'
+  PHONE: 'phone',
+  FILE: 'file'
 } as const
 
 export type FieldType = (typeof FIELD_TYPES)[keyof typeof FIELD_TYPES]
@@ -182,6 +183,29 @@ export interface PhoneField extends BaseField {
 }
 
 /**
+ * File upload field configuration.
+ */
+export interface FileField extends BaseField {
+  type: 'file'
+  /** Accept hint passed to the file input, e.g. ".pdf,image/*". */
+  accept?: string
+  /** Maximum allowed file size in megabytes. */
+  maxSizeMb?: number
+}
+
+/**
+ * Reference token stored in answers for an uploaded file.
+ * The raw file is never stored in the submission payload.
+ */
+export interface FileReference {
+  bucket: string
+  path: string
+  name: string
+  size: number
+  type: string
+}
+
+/**
  * Discriminated union of all field types.
  * The `type` property acts as the discriminant.
  */
@@ -196,3 +220,4 @@ export type FormField =
   | RadioField
   | DateField
   | PhoneField
+  | FileField

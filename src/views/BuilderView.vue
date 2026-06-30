@@ -351,7 +351,7 @@ onMounted(loadForm)
     </template>
     <!-- Live Preview (right sidebar alternative) -->
     <template #preview>
-      <LivePreview :schema="store.schema" :form-title="store.meta?.title" />
+      <LivePreview :schema="store.schema" :form-title="store.meta?.title" :form-id="store.meta?.id" />
     </template>
     <!-- Settings Dialog -->
     <q-dialog v-model="showSettingsDialog">

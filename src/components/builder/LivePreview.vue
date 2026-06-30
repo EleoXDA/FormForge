@@ -6,6 +6,7 @@ import type { FormSchema } from '@/types'
 interface Props {
   schema: FormSchema
   formTitle?: string
+  formId?: string
 }
 
 const props = defineProps<Props>()
@@ -79,6 +80,7 @@ function handlePreviewSubmit(values: Record<string, unknown>) {
           <SchemaRenderer
             v-model="previewValues"
             :schema="props.schema"
+            :form-id="props.formId"
             @submit="handlePreviewSubmit"
           />
         </div>

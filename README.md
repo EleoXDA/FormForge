@@ -13,7 +13,8 @@
 - **Undo/Redo System**: Full history tracking with keyboard shortcuts (Ctrl+Z/Y)
 - **Conditional Logic**: Per-field show/require/disable rules evaluated deterministically at runtime
 - **Multi-Step Wizards**: Split forms into validated steps with Next/Back navigation and saved local progress
-- **10 Field Types**: Text, email, number, phone, textarea, select, multiselect, checkbox, radio, date
+- **File Uploads**: Optional file field backed by Supabase Storage with signed upload URLs, type/size limits, and progress
+- **11 Field Types**: Text, email, number, phone, textarea, select, multiselect, checkbox, radio, date, file
 
 ## Demo
 
@@ -131,12 +132,12 @@ src/
 ## Known Limitations
 
 - **No authentication UI**: Auth is set up in Supabase but no login flow in the app yet
-- **No file uploads**: File field type is intentionally deferred
 
 ## Roadmap
 
 - [x] Conditional logic engine (show/hide, required-if, disable-if)
 - [x] Multi-step wizard forms
+- [x] File uploads (Supabase Storage)
 - [ ] Form analytics dashboard
 - [ ] Embeddable JS widget (beyond iframe)
 - [ ] Custom theming system

@@ -4,6 +4,7 @@ import type { FormField, FieldOption, ValidationRules, FieldLogic } from '@/type
 import CommonPropertiesEditor from './CommonPropertiesEditor.vue'
 import OptionsEditor from './OptionsEditor.vue'
 import ValidationEditor from './ValidationEditor.vue'
+import FilePropertiesEditor from './FilePropertiesEditor.vue'
 import LogicEditor from './LogicEditor.vue'
 
 interface Props {
@@ -33,7 +34,8 @@ const fieldIcon = computed(() => {
     multiselect: 'checklist',
     radio: 'radio_button_checked',
     checkbox: 'check_box',
-    date: 'event'
+    date: 'event',
+    file: 'attach_file'
   }
   return iconMap[props.field.type] || 'input'
 })
@@ -51,6 +53,21 @@ const hasOptions = computed(() =>
  */
 const hasValidation = computed(() => 
   ['text', 'email', 'number', 'textarea', 'phone'].includes(props.field.type)
+)
+
+/**
+ * Determine if this field type has file-upload options.
+ */
+const hasFileProps = computed(() => props.field.type === 'file')
+
+/**
+ * Current file-upload options (if applicable).
+ */
+const fileAccept = computed(() =>
+  props.field.type === 'file' ? props.field.accept : undefined
+)
+const fileMaxSizeMb = computed(() =>
+  props.field.type === 'file' ? props.field.maxSizeMb : undefined
 )
 
 /**
@@ -83,6 +100,10 @@ function handleOptionsUpdate(options: FieldOption[]) {
 
 function handleValidationUpdate(validation: ValidationRules | undefined) {
   emit('update:field', { validation } as Partial<FormField>)
+}
+
+function handleFileUpdate(updates: { accept?: string; maxSizeMb?: number }) {
+  emit('update:field', updates as Partial<FormField>)
 }
 
 /**
@@ -129,6 +150,14 @@ function handleLogicUpdate(logic: FieldLogic | undefined) {
       :validation="fieldValidation"
       :field-type="props.field.type"
       @update:validation="handleValidationUpdate"
+    />
+
+    <!-- File Options (file uploads) -->
+    <FilePropertiesEditor
+      v-if="hasFileProps"
+      :accept="fileAccept"
+      :max-size-mb="fileMaxSizeMb"
+      @update:file="handleFileUpdate"
     />
 
     <!-- Conditional Logic (all field types) -->

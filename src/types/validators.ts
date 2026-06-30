@@ -108,6 +108,11 @@ export const formFieldSchema = z.discriminatedUnion('type', [
   baseFieldSchema.extend({
     type: z.literal('phone'),
     validation: validationRulesSchema.pick({ pattern: true, patternMessage: true }).optional()
+  }),
+  baseFieldSchema.extend({
+    type: z.literal('file'),
+    accept: z.string().optional(),
+    maxSizeMb: z.number().positive().optional()
   })
 ])
 

@@ -127,6 +127,31 @@ describe('Zod validators', () => {
       
       expect(result.success).toBe(false)
     })
+
+    it('validates a file field with constraints', () => {
+      const result = formFieldSchema.safeParse({
+        id: 'field_1',
+        type: 'file',
+        name: 'resume',
+        label: 'Resume',
+        accept: '.pdf,image/*',
+        maxSizeMb: 5
+      })
+
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects a file field with a non-positive max size', () => {
+      const result = formFieldSchema.safeParse({
+        id: 'field_1',
+        type: 'file',
+        name: 'resume',
+        label: 'Resume',
+        maxSizeMb: 0
+      })
+
+      expect(result.success).toBe(false)
+    })
   })
 
   describe('formSettingsSchema', () => {

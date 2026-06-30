@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, provide } from 'vue'
 import type { FormSchema, FormField } from '@/types'
 import { fieldComponentMap } from './fields'
+import { formUploadContextKey, type FormUploadContext } from './uploadContext'
+import { isUploadEnabled } from '@/services'
 import {
   isMultiStep,
   groupFieldsBySteps,
@@ -18,18 +20,38 @@ interface Props {
   disabled?: boolean
   /** When set, in-progress answers and the active step are saved to localStorage. */
   storageKey?: string
+  /** 1-based step to open initially (deep links into a wizard step). */
+  initialStep?: number
+  /** Form id used to scope uploaded files (enables file fields). */
+  formId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   errors: () => ({}),
   disabled: false,
-  storageKey: undefined
+  storageKey: undefined,
+  initialStep: undefined,
+  formId: undefined
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: Record<string, unknown>]
   submit: [values: Record<string, unknown>]
+  'step-change': [step: number]
 }>()
+
+// Provide an upload context so file fields can resolve their target form.
+const uploadContext = reactive<FormUploadContext>({
+  formId: props.formId,
+  enabled: isUploadEnabled()
+})
+watch(
+  () => props.formId,
+  (id) => {
+    uploadContext.formId = id
+  }
+)
+provide(formUploadContextKey, uploadContext)
 
 const rootEl = ref<HTMLElement | null>(null)
 
@@ -43,10 +65,42 @@ const isLastStep = computed(
   () => !isWizard.value || currentStepIndex.value >= totalSteps.value - 1
 )
 
+// ----- Step helpers -----
+function clampStepIndex(index: number): number {
+  return Math.min(Math.max(index, 0), Math.max(totalSteps.value - 1, 0))
+}
+
+/** Convert a 1-based step number (e.g. from a URL) to a 0-based index. */
+function toStepIndex(step: number | undefined): number | null {
+  if (typeof step !== 'number' || !Number.isFinite(step) || step < 1) return null
+  return Math.floor(step) - 1
+}
+
 // Keep the active step in range if the schema changes (e.g. while editing).
 watch(totalSteps, (count) => {
   if (currentStepIndex.value > count - 1) {
     currentStepIndex.value = Math.max(0, count - 1)
+  }
+})
+
+// React to deep-link changes (e.g. browser back/forward updating the URL).
+watch(
+  () => props.initialStep,
+  (step) => {
+    const index = toStepIndex(step)
+    if (index !== null && isWizard.value) {
+      const clamped = clampStepIndex(index)
+      if (clamped !== currentStepIndex.value) {
+        currentStepIndex.value = clamped
+      }
+    }
+  }
+)
+
+// Notify the host so it can reflect the active step in the URL (deep links).
+watch(currentStepIndex, (index) => {
+  if (isWizard.value) {
+    emit('step-change', index + 1)
   }
 })
 
@@ -87,6 +141,7 @@ function getFieldValue(field: FormField): unknown {
   if (field.type === 'multiselect') return []
   if (field.type === 'number') return null
   if (field.type === 'checkbox') return false
+  if (field.type === 'file') return null
   return ''
 }
 
@@ -149,19 +204,31 @@ function clearProgress() {
 }
 
 onMounted(() => {
-  if (!props.storageKey) return
-  try {
-    const raw = window.localStorage.getItem(props.storageKey)
-    if (!raw) return
-    const saved = JSON.parse(raw) as { answers?: Record<string, unknown>; step?: number }
-    if (saved.answers && typeof saved.answers === 'object') {
-      emit('update:modelValue', { ...props.modelValue, ...saved.answers })
+  let restoredStep: number | null = null
+
+  // Restore saved answers/step from localStorage (opt-in via storageKey).
+  if (props.storageKey) {
+    try {
+      const raw = window.localStorage.getItem(props.storageKey)
+      if (raw) {
+        const saved = JSON.parse(raw) as { answers?: Record<string, unknown>; step?: number }
+        if (saved.answers && typeof saved.answers === 'object') {
+          emit('update:modelValue', { ...props.modelValue, ...saved.answers })
+        }
+        if (typeof saved.step === 'number' && saved.step >= 0) {
+          restoredStep = saved.step
+        }
+      }
+    } catch {
+      // ignore corrupted storage
     }
-    if (typeof saved.step === 'number' && saved.step >= 0) {
-      currentStepIndex.value = saved.step
-    }
-  } catch {
-    // ignore corrupted storage
+  }
+
+  // An explicit deep link (initialStep, 1-based) wins over saved progress.
+  const deepLinkIndex = toStepIndex(props.initialStep)
+  const target = deepLinkIndex ?? restoredStep
+  if (target !== null && isWizard.value) {
+    currentStepIndex.value = clampStepIndex(target)
   }
 })
 
