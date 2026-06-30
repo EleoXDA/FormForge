@@ -20,6 +20,13 @@
 
 🔗 **[Live Demo](https://formforge-demo.netlify.app)** *(coming soon)*
 
+Try the published demo forms (after running the demo seed):
+- `/f/demo-job-application` — conditional logic (portfolio shows for designers)
+- `/f/demo-incident-report` — required-if logic (injury details appear when someone was injured)
+- `/f/demo-event-registration` — multi-step wizard
+
+> No login is required to view or submit the demo forms. The builder dashboard requires a Supabase-authenticated session.
+
 ![FormForge Builder Screenshot](docs/screenshot-builder.png)
 
 ## Tech Stack
@@ -99,6 +106,12 @@ FormForge follows a **schema-driven UI** pattern where the form schema (JSON) is
 3. **Separation of Builder and Runtime**: The renderer can operate independently, making it suitable for embedding or extraction as a library
 4. **Zod Validation at Boundaries**: Schemas are validated when loaded from external sources (database, API)
 
+### Schema Versioning
+
+- Every publish writes a **new, immutable** `form_versions` row (the `version` increments via the `get_next_version` SQL helper).
+- The public runner loads the **latest published** version by slug, or a pinned one via `/f/:slug/v/:version`.
+- Each submission stores the exact `schema_version` it was captured against, so responses always map back to the schema the respondent actually saw.
+
 ### Directory Structure
 ```
 src/
@@ -158,6 +171,20 @@ src/
 - Field labels are associated with their inputs by the runtime field renderers.
 - On a failed submit the runtime shows a `role="alert"` **error summary** that lists each invalid field as a link which scrolls to and focuses the control.
 - The builder supports keyboard shortcuts (undo/redo, delete, duplicate) via `useBuilderKeyboard`.
+
+## Deployment
+
+FormForge is a single SPA that serves both the builder and the public form runner, deployed to **Netlify** with a **Supabase** backend.
+
+**Netlify** (config in [netlify.toml](netlify.toml)):
+- Build command `npm run build`, publish directory `dist`.
+- SPA history fallback (`/* → /index.html`) so deep links like `/f/:slug` work on refresh.
+- Framing is intentionally allowed so embedded forms render inside third-party `<iframe>`s.
+- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under **Site settings → Environment variables**.
+
+**Supabase**: run the migrations in [supabase/migrations](supabase/migrations) (schema, storage, optional demo seed) and confirm the production checklist in [supabase/README.md](supabase/README.md).
+
+Pushing to `main` triggers a production deploy; pull requests get Netlify deploy previews.
 
 ## Known Limitations
 

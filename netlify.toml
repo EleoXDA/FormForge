@@ -1,0 +1,38 @@
+# Netlify configuration for FormForge
+# A single SPA hosts both the builder (/forms, /builder) and the public
+# runtime runner (/f/:slug). Deploys are triggered from Git.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Set these in the Netlify UI (Site settings > Environment variables), not here:
+#   VITE_SUPABASE_URL
+#   VITE_SUPABASE_PUBLISHABLE_KEY
+
+# SPA history fallback: serve index.html for every route so deep links
+# (e.g. /f/:slug, /builder/:id, /preview/:id) work on refresh and direct hits.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Baseline security headers.
+# NOTE: framing is intentionally NOT blocked (no X-Frame-Options / restrictive
+# frame-ancestors) because the public form runner is designed to be embedded
+# via <iframe> on third-party sites.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), camera=(), microphone=()"
+
+# Long-cache the fingerprinted build assets.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
