@@ -317,4 +317,103 @@ describe('formEditorStore', () => {
       expect(store.isEmpty).toBe(false)
     })
   })
+
+  describe('multi-step', () => {
+    it('enableMultiStep creates a step and assigns all fields to it', () => {
+      const store = useFormEditorStore()
+      const a = createDefaultField('text')
+      const b = createDefaultField('email')
+      store.addField(a)
+      store.addField(b)
+
+      store.enableMultiStep()
+
+      expect(store.schema.steps?.length).toBe(1)
+      const stepId = store.schema.steps?.[0]?.id
+      expect(store.schema.fields.every((f) => f.stepId === stepId)).toBe(true)
+    })
+
+    it('enableMultiStep is a no-op when already multi-step', () => {
+      const store = useFormEditorStore()
+      store.enableMultiStep()
+      const firstId = store.schema.steps?.[0]?.id
+
+      store.enableMultiStep()
+
+      expect(store.schema.steps?.length).toBe(1)
+      expect(store.schema.steps?.[0]?.id).toBe(firstId)
+    })
+
+    it('addStep appends a new step', () => {
+      const store = useFormEditorStore()
+      store.enableMultiStep()
+
+      store.addStep('Second')
+
+      expect(store.schema.steps?.length).toBe(2)
+      expect(store.schema.steps?.[1]?.title).toBe('Second')
+    })
+
+    it('updateStep changes the title', () => {
+      const store = useFormEditorStore()
+      store.enableMultiStep()
+      const id = store.schema.steps?.[0]?.id as string
+
+      store.updateStep(id, { title: 'Renamed' })
+
+      expect(store.schema.steps?.[0]?.title).toBe('Renamed')
+    })
+
+    it('assignFieldToStep moves a field to another step', () => {
+      const store = useFormEditorStore()
+      const a = createDefaultField('text')
+      store.addField(a)
+      store.enableMultiStep()
+      store.addStep('Second')
+      const secondId = store.schema.steps?.[1]?.id as string
+
+      store.assignFieldToStep(a.id, secondId)
+
+      expect(store.schema.fields[0]?.stepId).toBe(secondId)
+    })
+
+    it('removeStep reassigns its fields to the first remaining step', () => {
+      const store = useFormEditorStore()
+      const a = createDefaultField('text')
+      store.addField(a)
+      store.enableMultiStep()
+      store.addStep('Second')
+      const firstId = store.schema.steps?.[0]?.id as string
+      const secondId = store.schema.steps?.[1]?.id as string
+      store.assignFieldToStep(a.id, secondId)
+
+      store.removeStep(secondId)
+
+      expect(store.schema.steps?.length).toBe(1)
+      expect(store.schema.fields[0]?.stepId).toBe(firstId)
+    })
+
+    it('moveStep reorders steps', () => {
+      const store = useFormEditorStore()
+      store.enableMultiStep()
+      store.addStep('Second')
+      const firstId = store.schema.steps?.[0]?.id
+
+      store.moveStep(0, 1)
+
+      expect(store.schema.steps?.[1]?.id).toBe(firstId)
+    })
+
+    it('disableMultiStep clears steps and field assignments', () => {
+      const store = useFormEditorStore()
+      const a = createDefaultField('text')
+      store.addField(a)
+      store.enableMultiStep()
+
+      store.disableMultiStep()
+
+      expect(store.schema.steps).toEqual([])
+      expect(store.schema.fields[0]?.stepId).toBeUndefined()
+    })
+  })
 })

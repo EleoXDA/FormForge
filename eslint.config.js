@@ -17,6 +17,7 @@ export default [
         Event: 'readonly',
         window: 'readonly',
         document: 'readonly',
+        HTMLElement: 'readonly',
         Blob: 'readonly',
         URL: 'readonly'
       },

@@ -238,5 +238,22 @@ describe('Zod validators', () => {
         expect(result.error.issues).toBeDefined()
       }
     })
+
+    it('validates a multi-step schema with steps and field stepId', () => {
+      const result = validateFormSchema({
+        schemaVersion: 1,
+        settings: {},
+        steps: [
+          { id: 'step_1', title: 'Step 1' },
+          { id: 'step_2', title: 'Step 2', description: 'More info' }
+        ],
+        fields: [
+          { id: 'field_1', type: 'text', name: 'first', label: 'First', stepId: 'step_1' },
+          { id: 'field_2', type: 'email', name: 'email', label: 'Email', stepId: 'step_2' }
+        ]
+      })
+
+      expect(result.success).toBe(true)
+    })
   })
 })

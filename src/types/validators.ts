@@ -58,7 +58,8 @@ const baseFieldSchema = z.object({
   required: z.boolean().optional(),
   disabled: z.boolean().optional(),
   defaultValue: z.unknown().optional(),
-  logic: fieldLogicSchema.optional()
+  logic: fieldLogicSchema.optional(),
+  stepId: z.string().optional()
 })
 
 /**
@@ -121,11 +122,21 @@ export const formSettingsSchema = z.object({
 })
 
 /**
+ * Wizard step schema (multi-step forms).
+ */
+export const formStepSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  description: z.string().optional()
+})
+
+/**
  * Complete form schema validator.
  */
 export const formSchemaValidator = z.object({
   schemaVersion: z.number().int().positive(),
   settings: formSettingsSchema,
+  steps: z.array(formStepSchema).optional(),
   fields: z.array(formFieldSchema)
 })
 

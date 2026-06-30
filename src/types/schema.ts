@@ -25,12 +25,23 @@ export interface FormMeta {
 }
 
 /**
+ * A single step (page) in a multi-step (wizard) form.
+ */
+export interface FormStep {
+  id: string
+  title: string
+  description?: string
+}
+
+/**
  * Complete form schema definition.
  * This is the JSON structure that the runtime renderer consumes.
  */
 export interface FormSchema {
   schemaVersion: number
   settings: FormSettings
+  /** Optional wizard steps. When present and non-empty, the form is multi-step. */
+  steps?: FormStep[]
   fields: FormField[]
 }
 

@@ -82,6 +82,8 @@ export interface BaseField {
   disabled?: boolean
   defaultValue?: unknown
   logic?: FieldLogic
+  /** Id of the wizard step this field belongs to (multi-step forms only). */
+  stepId?: string
 }
 
 /**

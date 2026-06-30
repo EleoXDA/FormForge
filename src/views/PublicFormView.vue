@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { formsService, isSupabaseConfigured } from '@/services'
 import { SchemaRenderer } from '@/components/runtime'
+import { isMultiStep } from '@/utils'
 import type { FormMeta, FormSchema } from '@/types'
 
 const route = useRoute()
@@ -31,6 +32,16 @@ const allowMultiple = computed(
 )
 const successMessage = computed(
   () => schema.value?.settings.successMessage || 'Thank you for your submission!'
+)
+
+/**
+ * Local-storage key used to persist in-progress answers for multi-step forms.
+ * Single-page forms return undefined so no progress is saved.
+ */
+const progressKey = computed(() =>
+  schema.value && isMultiStep(schema.value)
+    ? `formforge:progress:${slug.value}:${version.value ?? 'latest'}`
+    : undefined
 )
 
 /**
@@ -148,6 +159,7 @@ onMounted(loadForm)
           v-model="formValues"
           :schema="schema"
           :disabled="isSubmitting"
+          :storage-key="progressKey"
           @submit="handleSubmit"
         />
       </q-card>

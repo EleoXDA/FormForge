@@ -10,6 +10,7 @@ import {
   BuilderCanvas, 
   LivePreview, 
   FormSettingsEditor,
+  StepManager,
   SaveStatusIndicator 
 } from '@/components/builder'
 import { PropertyInspector } from '@/components/builder/inspector'
@@ -64,6 +65,9 @@ watch(
 
 // Settings dialog state
 const showSettingsDialog = ref(false)
+
+// Steps (wizard) dialog state
+const showStepsDialog = ref(false)
 
 // Share dialog state
 const showShareDialog = ref(false)
@@ -277,6 +281,9 @@ onMounted(loadForm)
       <q-btn flat dense icon="settings" class="q-ml-sm" @click="showSettingsDialog = true">
         <q-tooltip>Form Settings</q-tooltip>
       </q-btn>
+      <q-btn flat dense icon="layers" class="q-ml-sm" @click="showStepsDialog = true">
+        <q-tooltip>Multi-step (wizard) settings</q-tooltip>
+      </q-btn>
       <q-btn
         v-if="store.meta?.status === 'published'"
         flat
@@ -370,6 +377,29 @@ onMounted(loadForm)
 
         <q-card-actions align="right">
           <q-btn flat label="Close" color="primary" @click="showSettingsDialog = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Steps (wizard) Dialog -->
+    <q-dialog v-model="showStepsDialog">
+      <q-card style="width: 560px; max-width: 90vw">
+        <q-card-section class="row items-center">
+          <div class="text-h6">Multi-step Form</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="showStepsDialog = false" />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="scroll" style="max-height: 70vh">
+          <StepManager />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="primary" @click="showStepsDialog = false" />
         </q-card-actions>
       </q-card>
     </q-dialog>

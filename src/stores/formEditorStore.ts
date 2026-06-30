@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { FormSchema, FormField, FormMeta } from '@/types'
-import { createEmptySchema, generateFormId } from '@/utils'
+import type { FormSchema, FormField, FormMeta, FormStep } from '@/types'
+import { createEmptySchema, generateFormId, createStep } from '@/utils'
 
 /**
  * Store for managing the form currently being edited in the builder.
@@ -252,6 +252,111 @@ export const useFormEditorStore = defineStore(
       isDirty.value = true
     }
 
+    // ============================================
+    // Multi-step (wizard) actions
+    // ============================================
+
+    /**
+     * Convert the form into a multi-step (wizard) form. Creates an initial
+     * step and assigns all existing fields to it. No-op if already multi-step.
+     */
+    function enableMultiStep() {
+      if (schema.value.steps && schema.value.steps.length > 0) return
+      pushToHistory()
+      const step = createStep('Step 1')
+      schema.value.steps = [step]
+      for (const field of schema.value.fields) {
+        field.stepId = step.id
+      }
+      isDirty.value = true
+    }
+
+    /**
+     * Revert to a single-page form, removing all steps and field assignments.
+     */
+    function disableMultiStep() {
+      if (!schema.value.steps || schema.value.steps.length === 0) return
+      pushToHistory()
+      schema.value.steps = []
+      for (const field of schema.value.fields) {
+        delete field.stepId
+      }
+      isDirty.value = true
+    }
+
+    /**
+     * Add a new step to the wizard.
+     */
+    function addStep(title?: string) {
+      pushToHistory()
+      if (!schema.value.steps) schema.value.steps = []
+      schema.value.steps.push(createStep(title ?? `Step ${schema.value.steps.length + 1}`))
+      isDirty.value = true
+    }
+
+    /**
+     * Update a step's title/description.
+     */
+    function updateStep(stepId: string, updates: Partial<Omit<FormStep, 'id'>>) {
+      const step = schema.value.steps?.find((s) => s.id === stepId)
+      if (!step) return
+      pushToHistory()
+      Object.assign(step, updates)
+      isDirty.value = true
+    }
+
+    /**
+     * Remove a step. Its fields are reassigned to the first remaining step;
+     * if no steps remain, the form reverts to single-page.
+     */
+    function removeStep(stepId: string) {
+      const steps = schema.value.steps
+      if (!steps) return
+      const index = steps.findIndex((s) => s.id === stepId)
+      if (index === -1) return
+      pushToHistory()
+      steps.splice(index, 1)
+      const fallbackId = steps[0]?.id
+      for (const field of schema.value.fields) {
+        if (field.stepId === stepId) {
+          if (fallbackId) {
+            field.stepId = fallbackId
+          } else {
+            delete field.stepId
+          }
+        }
+      }
+      isDirty.value = true
+    }
+
+    /**
+     * Reorder steps (move from one index to another).
+     */
+    function moveStep(fromIndex: number, toIndex: number) {
+      const steps = schema.value.steps
+      if (!steps) return
+      if (fromIndex === toIndex) return
+      if (fromIndex < 0 || fromIndex >= steps.length) return
+      if (toIndex < 0 || toIndex >= steps.length) return
+      pushToHistory()
+      const [moved] = steps.splice(fromIndex, 1)
+      if (moved) {
+        steps.splice(toIndex, 0, moved)
+        isDirty.value = true
+      }
+    }
+
+    /**
+     * Assign a field to a specific step.
+     */
+    function assignFieldToStep(fieldId: string, stepId: string) {
+      const field = schema.value.fields.find((f) => f.id === fieldId)
+      if (!field) return
+      pushToHistory()
+      field.stepId = stepId
+      isDirty.value = true
+    }
+
     /**
      * Mark the form as saved (clear dirty flag).
      */
@@ -302,6 +407,13 @@ export const useFormEditorStore = defineStore(
       moveField,
       setFields,
       updateSettings,
+      enableMultiStep,
+      disableMultiStep,
+      addStep,
+      updateStep,
+      removeStep,
+      moveStep,
+      assignFieldToStep,
       markAsSaved,
       reset
     }
