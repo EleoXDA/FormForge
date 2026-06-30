@@ -6,7 +6,6 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  */
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-// alert(`URL=${String(supabaseUrl)} KEY=${String(supabaseKey).slice(0, 14)}`)
 
 // Validate that environment variables are configured
 if (!supabaseUrl || !supabaseKey) {

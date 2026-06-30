@@ -83,7 +83,7 @@ jobs:
         env:
           # Use placeholder values for build (actual values set in deployment)
           VITE_SUPABASE_URL: https://placeholder.supabase.co
-          VITE_SUPABASE_ANON_KEY: placeholder-key
+          VITE_SUPABASE_PUBLISHABLE_KEY: placeholder-key
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

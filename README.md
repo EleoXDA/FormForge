@@ -61,7 +61,7 @@ npm run dev
 Create a `.env.local` file with your Supabase credentials:
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
 See [supabase/README.md](supabase/README.md) for database setup instructions.
@@ -147,8 +147,3 @@ Contributions are welcome! Please read the contributing guidelines before submit
 ## License
 
 MIT © [Your Name]
-```
-
-2) `docs/.gitkeep` (new file — create docs directory)
-```
-# Placeholder for documentation assets

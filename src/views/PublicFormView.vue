@@ -1,270 +1,160 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
-import { useFormEditorStore } from '@/stores'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { formsService, isSupabaseConfigured } from '@/services'
-import { BuilderLayout, FieldPalette, BuilderCanvas } from '@/components/builder'
-import { PropertyInspector } from '@/components/builder/inspector'
-import { useBuilderKeyboard } from '@/composables'
-import type { FormField } from '@/types'
+import { SchemaRenderer } from '@/components/runtime'
+import type { FormMeta, FormSchema } from '@/types'
 
 const route = useRoute()
-const router = useRouter()
-const $q = useQuasar()
-const store = useFormEditorStore()
 
-// Enable keyboard shortcuts
-useBuilderKeyboard()
-
-const formId = computed(() => route.params['id'] as string)
-const formTitle = computed(() => store.meta?.title || 'Untitled Form')
-const isDirty = computed(() => store.isDirty)
-const canUndo = computed(() => store.canUndo)
-const canRedo = computed(() => store.canRedo)
-
-const isLoading = ref(false)
-const isSaving = ref(false)
-const loadError = ref<string | null>(null)
+const slug = computed(() => route.params['slug'] as string)
 const isConfigured = isSupabaseConfigured()
 
+const isLoading = ref(true)
+const loadError = ref<string | null>(null)
+const meta = ref<FormMeta | null>(null)
+const schema = ref<FormSchema | null>(null)
+
+const formValues = ref<Record<string, unknown>>({})
+const isSubmitting = ref(false)
+const submitError = ref<string | null>(null)
+const submitted = ref(false)
+
+const allowMultiple = computed(
+  () => schema.value?.settings.allowMultipleSubmissions ?? false
+)
+const successMessage = computed(
+  () => schema.value?.settings.successMessage || 'Thank you for your submission!'
+)
+
 /**
- * Load form from database or create new
+ * Load the published form identified by the public slug.
  */
 async function loadForm() {
-  const id = formId.value
-
-  // Special case: demo mode (no backend)
-  if (id === 'demo' || id === 'new' || !isConfigured) {
-    if (!store.meta || store.meta.id !== id) {
-      store.createNewForm('Demo Form')
-    }
-    return
-  }
-
   isLoading.value = true
   loadError.value = null
 
-  const result = await formsService.getFormById(id)
+  if (!isConfigured) {
+    loadError.value = 'This form is unavailable because the backend is not configured.'
+    isLoading.value = false
+    return
+  }
+
+  const result = await formsService.getFormBySlug(slug.value)
 
   if (result.success) {
-    store.loadForm(result.data.meta, result.data.schema)
+    meta.value = result.data.meta
+    schema.value = result.data.schema
   } else {
     loadError.value = result.error
-    // Fallback to local mode if form not found
-    if (!store.meta) {
-      store.createNewForm('New Form')
-    }
   }
 
   isLoading.value = false
 }
 
 /**
- * Save the current form to the database
+ * Submit the collected answers to the backend.
  */
-async function handleSave() {
-  if (!isConfigured) {
-    $q.notify({
-      type: 'warning',
-      message: 'Database not configured. Changes are saved locally only.'
-    })
-    store.markAsSaved()
-    return
-  }
+async function handleSubmit(values: Record<string, unknown>) {
+  if (!meta.value || !schema.value || isSubmitting.value) return
 
-  if (!store.meta?.id) return
+  isSubmitting.value = true
+  submitError.value = null
 
-  isSaving.value = true
+  const result = await formsService.submitResponse(
+    meta.value.id,
+    schema.value.schemaVersion,
+    values
+  )
 
-  // Save new version
-  const result = await formsService.saveVersion(store.meta.id, store.schema)
+  isSubmitting.value = false
 
   if (result.success) {
-    store.markAsSaved()
-    $q.notify({
-      type: 'positive',
-      message: `Saved as version ${result.data}`
-    })
+    submitted.value = true
+    // Optionally redirect after a successful submission
+    const redirectUrl = schema.value.settings.redirectUrl
+    if (redirectUrl) {
+      window.location.href = redirectUrl
+    }
   } else {
-    $q.notify({
-      type: 'negative',
-      message: result.error
-    })
+    submitError.value = result.error
   }
-
-  isSaving.value = false
 }
 
 /**
- * Publish the form (update status and save)
+ * Reset the form so the respondent can submit another response.
  */
-async function handlePublish() {
-  if (!isConfigured || !store.meta?.id) return
-
-  // First save the current version
-  await handleSave()
-
-  // Then update status to published
-  const result = await formsService.updateForm(store.meta.id, { status: 'published' })
-
-  if (result.success) {
-    if (store.meta) {
-      store.meta.status = 'published'
-    }
-    $q.notify({
-      type: 'positive',
-      message: 'Form published successfully!'
-    })
-  } else {
-    $q.notify({
-      type: 'negative',
-      message: result.error
-    })
-  }
+function submitAnother() {
+  formValues.value = {}
+  submitted.value = false
+  submitError.value = null
 }
 
-function handleUndo() {
-  store.undo()
-}
-
-function handleRedo() {
-  store.redo()
-}
-
-function handlePreview() {
-  router.push(`/preview/${formId.value}`)
-}
-
-function handleFieldUpdate(updates: Partial<FormField>) {
-  if (store.selectedFieldId) {
-    store.updateField(store.selectedFieldId, updates)
-  }
-}
-
-// Watch for route changes to load different forms
-watch(formId, loadForm)
-
+watch(slug, loadForm)
 onMounted(loadForm)
 </script>
 
 <template>
-  <BuilderLayout>
-    <!-- Title slot -->
-    <template #title>
-      <div class="flex items-center">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          class="q-mr-sm"
-          to="/forms"
-        />
-        <span>{{ formTitle }}</span>
-        <q-badge v-if="isDirty" color="orange" class="q-ml-sm">Unsaved</q-badge>
-        <q-badge
-          v-if="store.meta?.status === 'published'"
-          color="positive"
-          class="q-ml-sm"
-        >
-          Published
-        </q-badge>
-      </div>
-    </template>
-
-    <!-- Toolbar actions -->
-    <template #toolbar-actions>
-      <q-btn
-        flat
-        round
-        dense
-        icon="undo"
-        :disable="!canUndo"
-        @click="handleUndo"
-      >
-        <q-tooltip>Undo (Ctrl+Z)</q-tooltip>
-      </q-btn>
-      <q-btn
-        flat
-        round
-        dense
-        icon="redo"
-        :disable="!canRedo"
-        @click="handleRedo"
-      >
-        <q-tooltip>Redo (Ctrl+Y)</q-tooltip>
-      </q-btn>
-      <q-separator vertical inset class="q-mx-sm" />
-      <q-btn
-        flat
-        dense
-        icon="visibility"
-        label="Preview"
-        @click="handlePreview"
-      />
-      <q-btn
-        dense
-        color="primary"
-        icon="save"
-        label="Save"
-        :loading="isSaving"
-        :disable="!isDirty"
-        class="q-ml-sm"
-        @click="handleSave"
-      />
-      <q-btn
-        v-if="store.meta?.status !== 'published'"
-        dense
-        color="positive"
-        icon="publish"
-        label="Publish"
-        class="q-ml-sm"
-        @click="handlePublish"
-      />
-    </template>
-
-    <!-- Field Palette (left sidebar) -->
-    <template #palette>
-      <FieldPalette />
-    </template>
-
-    <!-- Canvas (center) -->
-    <template #canvas>
+  <q-page class="public-form-page" padding>
+    <div class="public-form-container">
       <!-- Loading state -->
       <div v-if="isLoading" class="flex flex-center q-pa-xl">
         <q-spinner color="primary" size="48px" />
       </div>
 
-      <!-- Error state -->
-      <div v-else-if="loadError" class="q-pa-lg">
-        <q-banner class="bg-negative text-white" rounded>
-          <template #avatar>
-            <q-icon name="error" />
-          </template>
-          {{ loadError }}
-          <template #action>
-            <q-btn flat label="Retry" @click="loadForm" />
-            <q-btn flat label="Create New" @click="store.createNewForm('New Form')" />
-          </template>
+      <!-- Error / not found state -->
+      <q-banner v-else-if="loadError" class="bg-negative text-white" rounded>
+        <template #avatar>
+          <q-icon name="error" />
+        </template>
+        {{ loadError }}
+        <template #action>
+          <q-btn flat label="Retry" @click="loadForm" />
+        </template>
+      </q-banner>
+
+      <!-- Success state -->
+      <q-card v-else-if="submitted" flat bordered class="text-center q-pa-xl">
+        <q-icon name="check_circle" color="positive" size="64px" />
+        <h2 class="text-h5 q-mt-md q-mb-sm">{{ successMessage }}</h2>
+        <q-btn
+          v-if="allowMultiple"
+          color="primary"
+          label="Submit another response"
+          class="q-mt-md"
+          @click="submitAnother"
+        />
+      </q-card>
+
+      <!-- Form -->
+      <q-card v-else-if="schema" flat bordered class="q-pa-lg">
+        <h1 class="text-h5 q-mb-xs">{{ meta?.title }}</h1>
+        <p v-if="meta?.description" class="text-grey-7 q-mb-lg">
+          {{ meta.description }}
+        </p>
+
+        <q-banner v-if="submitError" class="bg-negative text-white q-mb-md" rounded dense>
+          {{ submitError }}
         </q-banner>
-      </div>
 
-      <!-- Canvas -->
-      <BuilderCanvas v-else />
-    </template>
-
-    <!-- Inspector (right sidebar) -->
-    <template #inspector>
-      <PropertyInspector
-        v-if="store.selectedField"
-        :field="store.selectedField"
-        @update:field="handleFieldUpdate"
-      />
-      <div v-else class="text-center text-grey q-pa-lg">
-        <q-icon name="touch_app" size="48px" color="grey-4" />
-        <p class="q-mt-md">Select a field to edit its properties</p>
-      </div>
-    </template>
-  </BuilderLayout>
+        <SchemaRenderer
+          v-model="formValues"
+          :schema="schema"
+          :disabled="isSubmitting"
+          @submit="handleSubmit"
+        />
+      </q-card>
+    </div>
+  </q-page>
 </template>
+
+<style scoped>
+.public-form-page {
+  background: #f5f5f5;
+}
+
+.public-form-container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+</style>

@@ -285,14 +285,14 @@ onMounted(async () => {
       <!-- Submissions table -->
       <q-table
         v-else
+        v-model:pagination="pagination"
         :rows="submissions"
         :columns="tableColumns"
         row-key="id"
         :loading="isLoading"
-        v-model:pagination="pagination"
-        @request="onPaginationChange"
         flat
         bordered
+        @request="onPaginationChange"
       >
         <!-- Actions column -->
         <template #body-cell-actions="props">

@@ -33,6 +33,7 @@ export function useAutoSave(options: UseAutoSaveOptions) {
   const error = ref<string | null>(null)
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
+  let idleTimer: ReturnType<typeof setTimeout> | null = null
 
   /**
    * Check if auto-save is currently enabled
@@ -84,10 +85,14 @@ export function useAutoSave(options: UseAutoSaveOptions) {
       lastSavedAt.value = new Date()
 
       // Reset to idle after a short delay
-      setTimeout(() => {
+      if (idleTimer) {
+        clearTimeout(idleTimer)
+      }
+      idleTimer = setTimeout(() => {
         if (status.value === 'saved') {
           status.value = 'idle'
         }
+        idleTimer = null
       }, 2000)
     } catch (err) {
       status.value = 'error'
@@ -103,6 +108,10 @@ export function useAutoSave(options: UseAutoSaveOptions) {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
       debounceTimer = null
+    }
+    if (idleTimer) {
+      clearTimeout(idleTimer)
+      idleTimer = null
     }
     if (status.value === 'pending') {
       status.value = 'idle'
