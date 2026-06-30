@@ -26,6 +26,49 @@ export interface FieldOption {
 }
 
 /**
+ * Comparison operators available to conditional-logic conditions.
+ */
+export type ConditionOperator =
+  | 'equals'
+  | 'notEquals'
+  | 'contains'
+  | 'gt'
+  | 'lt'
+  | 'isEmpty'
+  | 'isNotEmpty'
+
+/**
+ * A single condition comparing another field's answer to a value.
+ * `field` references the id of the field this condition depends on.
+ */
+export interface Condition {
+  field: string
+  operator: ConditionOperator
+  value?: unknown
+}
+
+/**
+ * A group of conditions combined with a logical AND/OR.
+ */
+export interface ConditionGroup {
+  combinator: 'and' | 'or'
+  conditions: Condition[]
+}
+
+/**
+ * Conditional-logic rules attached to a field. Each rule is evaluated
+ * against the current answers at runtime (deterministically, no eval).
+ */
+export interface FieldLogic {
+  /** Show the field only when these conditions match. */
+  showIf?: ConditionGroup
+  /** Mark the field required when these conditions match. */
+  requiredIf?: ConditionGroup
+  /** Disable (read-only) the field when these conditions match. */
+  disableIf?: ConditionGroup
+}
+
+/**
  * Base properties shared by all field types.
  */
 export interface BaseField {
@@ -38,6 +81,7 @@ export interface BaseField {
   required?: boolean
   disabled?: boolean
   defaultValue?: unknown
+  logic?: FieldLogic
 }
 
 /**

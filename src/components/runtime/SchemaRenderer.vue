@@ -2,6 +2,12 @@
 import { computed } from 'vue'
 import type { FormSchema, FormField } from '@/types'
 import { fieldComponentMap } from './fields'
+import {
+  getVisibleFields,
+  isFieldRequired,
+  isFieldDisabled,
+  filterVisibleAnswers
+} from '@/utils'
 
 interface Props {
   schema: FormSchema
@@ -19,6 +25,21 @@ const emit = defineEmits<{
   'update:modelValue': [value: Record<string, unknown>]
   submit: [values: Record<string, unknown>]
 }>()
+
+/**
+ * Visible fields with `required`/`disabled` resolved from conditional logic,
+ * so the existing field renderers honour requiredIf / disableIf rules.
+ */
+const renderFields = computed<FormField[]>(() =>
+  getVisibleFields(props.schema, props.modelValue).map(
+    (field) =>
+      ({
+        ...field,
+        required: isFieldRequired(field, props.schema, props.modelValue),
+        disabled: props.disabled || isFieldDisabled(field, props.schema, props.modelValue)
+      }) as FormField
+  )
+)
 
 function getFieldComponent(field: FormField) {
   return fieldComponentMap[field.type]
@@ -44,7 +65,8 @@ function updateFieldValue(field: FormField, value: unknown) {
 }
 
 function handleSubmit() {
-  emit('submit', props.modelValue)
+  // Only submit answers for currently-visible fields.
+  emit('submit', filterVisibleAnswers(props.schema, props.modelValue))
 }
 
 const submitButtonText = computed(() => props.schema.settings.submitButtonText || 'Submit')
@@ -53,7 +75,7 @@ const submitButtonText = computed(() => props.schema.settings.submitButtonText |
 <template>
   <q-form class="schema-renderer" @submit.prevent="handleSubmit">
     <div
-      v-for="field in props.schema.fields"
+      v-for="field in renderFields"
       :key="field.id"
       class="q-mb-md"
     >
@@ -62,7 +84,7 @@ const submitButtonText = computed(() => props.schema.settings.submitButtonText |
         :field="field"
         :model-value="getFieldValue(field)"
         :error="props.errors[field.name]"
-        :disabled="props.disabled || field.disabled"
+        :disabled="field.disabled"
         @update:model-value="(v: unknown) => updateFieldValue(field, v)"
       />
     </div>

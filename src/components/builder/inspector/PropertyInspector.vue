@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FormField, FieldOption, ValidationRules } from '@/types'
+import type { FormField, FieldOption, ValidationRules, FieldLogic } from '@/types'
 import CommonPropertiesEditor from './CommonPropertiesEditor.vue'
 import OptionsEditor from './OptionsEditor.vue'
 import ValidationEditor from './ValidationEditor.vue'
+import LogicEditor from './LogicEditor.vue'
 
 interface Props {
   field: FormField
+  availableFields?: FormField[]
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  availableFields: () => []
+})
 
 const emit = defineEmits<{
   'update:field': [updates: Partial<FormField>]
@@ -80,6 +84,17 @@ function handleOptionsUpdate(options: FieldOption[]) {
 function handleValidationUpdate(validation: ValidationRules | undefined) {
   emit('update:field', { validation } as Partial<FormField>)
 }
+
+/**
+ * Fields that this field's conditions may depend on (everything but itself).
+ */
+const logicFields = computed(() =>
+  props.availableFields.filter((f) => f.id !== props.field.id)
+)
+
+function handleLogicUpdate(logic: FieldLogic | undefined) {
+  emit('update:field', { logic } as Partial<FormField>)
+}
 </script>
 
 <template>
@@ -114,6 +129,13 @@ function handleValidationUpdate(validation: ValidationRules | undefined) {
       :validation="fieldValidation"
       :field-type="props.field.type"
       @update:validation="handleValidationUpdate"
+    />
+
+    <!-- Conditional Logic (all field types) -->
+    <LogicEditor
+      :field="props.field"
+      :available-fields="logicFields"
+      @update:logic="handleLogicUpdate"
     />
 
     <!-- Field ID (read-only, for debugging) -->

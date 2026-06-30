@@ -185,6 +185,49 @@ export const formsService = {
   },
 
   /**
+   * Get a published form by its public slug and a specific version number
+   */
+  async getFormBySlugVersion(
+    slug: string,
+    version: number
+  ): Promise<ServiceResult<FormDocument>> {
+    try {
+      const { data: formData, error: formError } = await supabase
+        .from('forms')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single()
+
+      if (formError) throw formError
+
+      const { data: versionData, error: versionError } = await supabase
+        .from('form_versions')
+        .select('version, schema')
+        .eq('form_id', formData.id)
+        .eq('version', version)
+        .single()
+
+      if (versionError) throw versionError
+
+      return {
+        success: true,
+        data: {
+          meta: rowToFormMeta(formData as FormRow),
+          schema: versionData.schema,
+          currentVersion: versionData.version
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch form by slug and version:', err)
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Form not found'
+      }
+    }
+  },
+
+  /**
    * Create a new form
    */
   async createForm(title: string): Promise<ServiceResult<FormMeta>> {

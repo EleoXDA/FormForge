@@ -30,6 +30,11 @@ const routes: RouteRecordRaw[] = [
     path: '/f/:slug',
     name: 'public-form',
     component: () => import('@/views/PublicFormView.vue')
+  },
+  {
+    path: '/f/:slug/v/:version',
+    name: 'public-form-version',
+    component: () => import('@/views/PublicFormView.vue')
   }
 ]
 

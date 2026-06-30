@@ -65,6 +65,34 @@ watch(
 // Settings dialog state
 const showSettingsDialog = ref(false)
 
+// Share dialog state
+const showShareDialog = ref(false)
+
+const publicUrl = computed(() => {
+  const slug = store.meta?.slug
+  if (!slug) return ''
+  return `${window.location.origin}/f/${slug}`
+})
+
+const embedSnippet = computed(() =>
+  publicUrl.value
+    ? `<iframe src="${publicUrl.value}" width="100%" height="600" style="border:0" title="${formTitle.value}"></iframe>`
+    : ''
+)
+
+/**
+ * Copy text to the clipboard and notify the user.
+ */
+async function copyText(text: string, label: string) {
+  if (!text) return
+  try {
+    await window.navigator.clipboard.writeText(text)
+    $q.notify({ type: 'positive', message: `${label} copied to clipboard`, position: 'top' })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Unable to copy to clipboard', position: 'top' })
+  }
+}
+
 /**
  * Load form from database or create new
  */
@@ -250,6 +278,17 @@ onMounted(loadForm)
         <q-tooltip>Form Settings</q-tooltip>
       </q-btn>
       <q-btn
+        v-if="store.meta?.status === 'published'"
+        flat
+        dense
+        icon="share"
+        label="Share"
+        class="q-ml-sm"
+        @click="showShareDialog = true"
+      >
+        <q-tooltip>Share &amp; embed this form</q-tooltip>
+      </q-btn>
+      <q-btn
         v-if="store.meta?.status !== 'published'"
         dense
         color="positive"
@@ -295,6 +334,7 @@ onMounted(loadForm)
       <PropertyInspector
         v-if="store.selectedField"
         :field="store.selectedField"
+        :available-fields="store.schema.fields"
         @update:field="handleFieldUpdate"
       />
       <div v-else class="text-center text-grey q-pa-lg">
@@ -331,6 +371,47 @@ onMounted(loadForm)
         <q-card-actions align="right">
           <q-btn flat label="Close" color="primary" @click="showSettingsDialog = false" />
         </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Share & Embed Dialog -->
+    <q-dialog v-model="showShareDialog">
+      <q-card style="width: 560px; max-width: 90vw">
+        <q-card-section class="row items-center">
+          <div class="text-h6">Share &amp; Embed</div>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="showShareDialog = false" />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <div class="text-subtitle2 q-mb-xs">Public link</div>
+          <q-input :model-value="publicUrl" readonly outlined dense>
+            <template #append>
+              <q-btn flat dense round icon="content_copy" @click="copyText(publicUrl, 'Link')">
+                <q-tooltip>Copy link</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
+          <div class="text-caption text-grey-7 q-mt-xs">
+            Anyone with this link can view and submit the published form.
+          </div>
+
+          <div class="text-subtitle2 q-mt-md q-mb-xs">Embed snippet</div>
+          <q-input :model-value="embedSnippet" type="textarea" readonly outlined dense autogrow />
+          <div class="row justify-end q-mt-sm">
+            <q-btn
+              flat
+              dense
+              no-caps
+              color="primary"
+              icon="content_copy"
+              label="Copy embed code"
+              @click="copyText(embedSnippet, 'Embed code')"
+            />
+          </div>
+        </q-card-section>
       </q-card>
     </q-dialog>
   </BuilderLayout>

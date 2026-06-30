@@ -11,6 +11,7 @@
 - **Visual Drag-and-Drop Builder**: Intuitive interface for creating forms without writing code
 - **Type-Safe Runtime**: Zod validators ensure schema integrity at runtime, catching errors before they reach users
 - **Undo/Redo System**: Full history tracking with keyboard shortcuts (Ctrl+Z/Y)
+- **Conditional Logic**: Per-field show/require/disable rules evaluated deterministically at runtime
 - **10 Field Types**: Text, email, number, phone, textarea, select, multiselect, checkbox, radio, date
 
 ## Demo
@@ -120,6 +121,7 @@ src/
 
 **Key tests:**
 - `src/utils/schema.test.ts` - Schema utility coverage
+- `src/utils/logic.test.ts` - Conditional logic evaluator coverage
 - `src/stores/formEditorStore.test.ts` - Store action testing
 
 **Architecture docs:**
@@ -129,12 +131,11 @@ src/
 
 - **No authentication UI**: Auth is set up in Supabase but no login flow in the app yet
 - **Single-page forms only**: Multi-step wizard forms are designed but not implemented
-- **No conditional logic**: Show/hide rules are in the type system but not the UI
 - **No file uploads**: File field type is intentionally deferred
 
 ## Roadmap
 
-- [ ] Conditional logic engine (show/hide fields based on values)
+- [x] Conditional logic engine (show/hide, required-if, disable-if)
 - [ ] Multi-step wizard forms
 - [ ] Form analytics dashboard
 - [ ] Embeddable JS widget (beyond iframe)

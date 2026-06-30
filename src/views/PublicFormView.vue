@@ -8,6 +8,12 @@ import type { FormMeta, FormSchema } from '@/types'
 const route = useRoute()
 
 const slug = computed(() => route.params['slug'] as string)
+const version = computed(() => {
+  const raw = route.params['version']
+  if (raw === undefined || Array.isArray(raw)) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+})
 const isConfigured = isSupabaseConfigured()
 
 const isLoading = ref(true)
@@ -40,7 +46,9 @@ async function loadForm() {
     return
   }
 
-  const result = await formsService.getFormBySlug(slug.value)
+  const result = version.value
+    ? await formsService.getFormBySlugVersion(slug.value, version.value)
+    : await formsService.getFormBySlug(slug.value)
 
   if (result.success) {
     meta.value = result.data.meta
@@ -51,7 +59,6 @@ async function loadForm() {
 
   isLoading.value = false
 }
-
 /**
  * Submit the collected answers to the backend.
  */
@@ -90,7 +97,7 @@ function submitAnother() {
   submitError.value = null
 }
 
-watch(slug, loadForm)
+watch([slug, version], loadForm)
 onMounted(loadForm)
 </script>
 

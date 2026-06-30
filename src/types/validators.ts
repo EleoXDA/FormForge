@@ -21,6 +21,32 @@ export const validationRulesSchema = z.object({
 })
 
 /**
+ * Zod schema for a single conditional-logic condition.
+ */
+export const conditionSchema = z.object({
+  field: z.string().min(1),
+  operator: z.enum(['equals', 'notEquals', 'contains', 'gt', 'lt', 'isEmpty', 'isNotEmpty']),
+  value: z.unknown().optional()
+})
+
+/**
+ * Zod schema for a group of conditions combined with AND/OR.
+ */
+export const conditionGroupSchema = z.object({
+  combinator: z.enum(['and', 'or']),
+  conditions: z.array(conditionSchema)
+})
+
+/**
+ * Zod schema for a field's conditional-logic rules.
+ */
+export const fieldLogicSchema = z.object({
+  showIf: conditionGroupSchema.optional(),
+  requiredIf: conditionGroupSchema.optional(),
+  disableIf: conditionGroupSchema.optional()
+})
+
+/**
  * Base field schema (shared properties).
  */
 const baseFieldSchema = z.object({
@@ -31,7 +57,8 @@ const baseFieldSchema = z.object({
   helpText: z.string().optional(),
   required: z.boolean().optional(),
   disabled: z.boolean().optional(),
-  defaultValue: z.unknown().optional()
+  defaultValue: z.unknown().optional(),
+  logic: fieldLogicSchema.optional()
 })
 
 /**
