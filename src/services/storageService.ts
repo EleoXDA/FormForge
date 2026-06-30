@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { supabase, isSupabaseConfigured, SUPABASE_URL } from './supabase'
+import { logger } from '@/utils/logger'
 import type { ServiceResult } from './formsService'
 import type { FileReference } from '@/types'
 
@@ -148,7 +149,7 @@ export async function uploadFormFile(
       }
     }
   } catch (err) {
-    console.error('File upload failed:', err)
+    logger.error('File upload failed', err)
     return {
       success: false,
       error: err instanceof Error ? err.message : 'File upload failed.'

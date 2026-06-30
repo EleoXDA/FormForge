@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logger } from '@/utils/logger'
 import type { FormMeta, FormSchema, FormDocument, FormSubmission } from '@/types'
 
 /**
@@ -80,7 +81,7 @@ export const formsService = {
         data: (data as FormRow[]).map(rowToFormMeta)
       }
     } catch (err) {
-      console.error('Failed to fetch forms:', err)
+      logger.error('Failed to fetch forms', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to fetch forms'
@@ -134,7 +135,7 @@ export const formsService = {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch form:', err)
+      logger.error('Failed to fetch form', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to fetch form'
@@ -176,7 +177,7 @@ export const formsService = {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch form by slug:', err)
+      logger.error('Failed to fetch form by slug', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Form not found'
@@ -219,7 +220,7 @@ export const formsService = {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch form by slug and version:', err)
+      logger.error('Failed to fetch form by slug and version', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Form not found'
@@ -252,7 +253,7 @@ export const formsService = {
         data: rowToFormMeta(data as FormRow)
       }
     } catch (err) {
-      console.error('Failed to create form:', err)
+      logger.error('Failed to create form', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to create form'
@@ -282,7 +283,7 @@ export const formsService = {
         data: rowToFormMeta(data as FormRow)
       }
     } catch (err) {
-      console.error('Failed to update form:', err)
+      logger.error('Failed to update form', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to update form'
@@ -317,7 +318,7 @@ export const formsService = {
         data: versionNum as number
       }
     } catch (err) {
-      console.error('Failed to save version:', err)
+      logger.error('Failed to save version', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to save version'
@@ -339,7 +340,7 @@ export const formsService = {
 
       return { success: true, data: undefined }
     } catch (err) {
-      console.error('Failed to delete form:', err)
+      logger.error('Failed to delete form', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to delete form'
@@ -370,12 +371,13 @@ export const formsService = {
 
       if (error) throw error
 
+      logger.event('form_submitted', { formId, schemaVersion })
       return {
         success: true,
         data: data.id
       }
     } catch (err) {
-      console.error('Failed to submit response:', err)
+      logger.error('Failed to submit response', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to submit response'
@@ -437,7 +439,7 @@ export const formsService = {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch submissions:', err)
+      logger.error('Failed to fetch submissions', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to fetch submissions'

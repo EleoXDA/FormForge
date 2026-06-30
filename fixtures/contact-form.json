@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "submitButtonText": "Send",
+    "successMessage": "Thanks for reaching out!"
+  },
+  "fields": [
+    {
+      "id": "f_name",
+      "type": "text",
+      "name": "full_name",
+      "label": "Full Name",
+      "required": true,
+      "validation": { "minLength": 2, "maxLength": 80 }
+    },
+    {
+      "id": "f_email",
+      "type": "email",
+      "name": "email",
+      "label": "Email Address",
+      "required": true
+    },
+    {
+      "id": "f_message",
+      "type": "textarea",
+      "name": "message",
+      "label": "Message",
+      "rows": 4,
+      "validation": { "maxLength": 1000 }
+    }
+  ]
+}

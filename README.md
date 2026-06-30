@@ -33,7 +33,8 @@
 | Drag & Drop | VueDraggable (SortableJS) |
 | Validation | Zod + VeeValidate |
 | Backend | Supabase (PostgreSQL) |
-| Testing | Vitest + Vue Test Utils |
+| Unit/Component Testing | Vitest + Vue Test Utils |
+| E2E Testing | Playwright |
 | CI/CD | GitHub Actions |
 
 ## Quick Start
@@ -79,6 +80,7 @@ See [supabase/README.md](supabase/README.md) for database setup instructions.
 | `npm run test` | Run tests in watch mode |
 | `npm run test:run` | Run tests once |
 | `npm run test:coverage` | Run tests with coverage |
+| `npm run test:e2e` | Run Playwright end-to-end tests |
 
 ## Architecture
 
@@ -125,9 +127,37 @@ src/
 - `src/utils/schema.test.ts` - Schema utility coverage
 - `src/utils/logic.test.ts` - Conditional logic evaluator coverage
 - `src/stores/formEditorStore.test.ts` - Store action testing
+- `src/components/runtime/fields/fieldRenderers.test.ts` - Field renderer component tests
+- `src/test/fixtures.test.ts` - Regression fixtures (sample schemas in `fixtures/`)
+- `e2e/` - Playwright end-to-end flows (builder demo + runtime render/validate/submit)
 
 **Architecture docs:**
 - [supabase/README.md](supabase/README.md) - Database schema and RLS policies
+
+## Observability
+
+- Structured frontend logging via a single `logger` utility (`src/utils/logger.ts`) with `debug`/`info`/`warn`/`error` levels and a typed `LogEntry` shape.
+- Key product events are recorded with `logger.event(...)` — currently `form_published` (builder) and `form_submitted` (runtime) — making them easy to filter and forward to a remote sink later.
+- Quiet in production (warnings/errors only) and verbose in development. Service-layer errors flow through the logger instead of bare `console` calls.
+
+## Performance
+
+- **Debounced autosave**: builder changes are persisted on a 3s debounce (`useAutoSave`) rather than on every keystroke.
+- **Shallow history**: undo/redo snapshots are stored with `markRaw` so large schema trees don't incur deep-reactivity overhead; the live editing copy is re-cloned on restore to stay reactive.
+- **Paginated + virtualized submissions**: the submissions table loads one page at a time from the server (constant memory) and virtualizes the rendered rows.
+
+## Security
+
+- **No `eval` / `new Function`**: conditional logic is evaluated by a deterministic interpreter (`src/utils/logic.ts`), never by evaluating strings.
+- **Secrets only on the server**: the client uses the Supabase *publishable* (anon) key only; no service-role key is shipped to the browser.
+- **Row Level Security**: builder writes require an authenticated owner; the public runtime can only read published versions and insert submissions. File uploads use short-lived, path-scoped signed URLs against a private bucket (no listing). See [supabase/migrations](supabase/migrations).
+- **Public submission abuse**: submissions are insert-only under RLS and the UI guards against double-submit. For production, add edge rate-limiting per IP/form.
+
+## Accessibility
+
+- Field labels are associated with their inputs by the runtime field renderers.
+- On a failed submit the runtime shows a `role="alert"` **error summary** that lists each invalid field as a link which scrolls to and focuses the control.
+- The builder supports keyboard shortcuts (undo/redo, delete, duplicate) via `useBuilderKeyboard`.
 
 ## Known Limitations
 

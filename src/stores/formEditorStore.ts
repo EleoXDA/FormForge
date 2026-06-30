@@ -1,7 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, markRaw } from 'vue'
 import type { FormSchema, FormField, FormMeta, FormStep } from '@/types'
 import { createEmptySchema, generateFormId, createStep } from '@/utils'
+
+/**
+ * Deep-clone a schema. Used for history snapshots so undo/redo never share
+ * references with the live, reactive editing copy.
+ */
+function cloneSchema(source: FormSchema): FormSchema {
+  return JSON.parse(JSON.stringify(source)) as FormSchema
+}
 
 /**
  * Store for managing the form currently being edited in the builder.
@@ -120,9 +128,10 @@ export const useFormEditorStore = defineStore(
      * Call this before any schema modification.
      */
     function pushToHistory() {
-      // Deep clone the current schema
-      const snapshot = JSON.parse(JSON.stringify(schema.value)) as FormSchema
-      historyStack.value.push(snapshot)
+      // Store a non-reactive deep clone: snapshots are only ever restored
+      // wholesale (never mutated), so deep reactivity would be wasted overhead
+      // on potentially large schema trees.
+      historyStack.value.push(markRaw(cloneSchema(schema.value)))
 
       // Limit history size
       if (historyStack.value.length > MAX_HISTORY) {
@@ -140,13 +149,12 @@ export const useFormEditorStore = defineStore(
       if (!canUndo.value) return
 
       // Save current state to redo stack
-      const currentSnapshot = JSON.parse(JSON.stringify(schema.value)) as FormSchema
-      redoStack.value.push(currentSnapshot)
+      redoStack.value.push(markRaw(cloneSchema(schema.value)))
 
-      // Restore previous state
+      // Restore previous state (clone so the live copy stays reactive)
       const previousState = historyStack.value.pop()
       if (previousState) {
-        schema.value = previousState
+        schema.value = cloneSchema(previousState)
         isDirty.value = true
 
         // Clear selection if the selected field no longer exists
@@ -166,13 +174,12 @@ export const useFormEditorStore = defineStore(
       if (!canRedo.value) return
 
       // Save current state to history
-      const currentSnapshot = JSON.parse(JSON.stringify(schema.value)) as FormSchema
-      historyStack.value.push(currentSnapshot)
+      historyStack.value.push(markRaw(cloneSchema(schema.value)))
 
-      // Restore the undone state
+      // Restore the undone state (clone so the live copy stays reactive)
       const redoState = redoStack.value.pop()
       if (redoState) {
-        schema.value = redoState
+        schema.value = cloneSchema(redoState)
         isDirty.value = true
       }
     }

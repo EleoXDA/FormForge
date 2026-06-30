@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "submitButtonText": "Register",
+    "successMessage": "You're registered. See you there!"
+  },
+  "steps": [
+    { "id": "step_attendee", "title": "Attendee", "description": "Tell us about yourself" },
+    { "id": "step_preferences", "title": "Preferences" }
+  ],
+  "fields": [
+    {
+      "id": "f_name",
+      "type": "text",
+      "name": "full_name",
+      "label": "Full Name",
+      "required": true,
+      "stepId": "step_attendee"
+    },
+    {
+      "id": "f_email",
+      "type": "email",
+      "name": "email",
+      "label": "Email",
+      "required": true,
+      "stepId": "step_attendee"
+    },
+    {
+      "id": "f_guests",
+      "type": "number",
+      "name": "guests",
+      "label": "Number of guests",
+      "validation": { "min": 0, "max": 10 },
+      "stepId": "step_attendee"
+    },
+    {
+      "id": "f_tracks",
+      "type": "multiselect",
+      "name": "tracks",
+      "label": "Tracks of interest",
+      "required": true,
+      "options": [
+        { "value": "ai", "label": "AI" },
+        { "value": "web", "label": "Web" },
+        { "value": "cloud", "label": "Cloud" }
+      ],
+      "stepId": "step_preferences"
+    },
+    {
+      "id": "f_meal",
+      "type": "select",
+      "name": "meal",
+      "label": "Meal preference",
+      "options": [
+        { "value": "veg", "label": "Vegetarian" },
+        { "value": "non_veg", "label": "Non-vegetarian" }
+      ],
+      "stepId": "step_preferences"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/utils/logger'
 
 /**
  * Environment variables for Supabase connection.
@@ -9,9 +10,9 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
 // Validate that environment variables are configured
 if (!supabaseUrl || !supabaseKey) {
-  console.error(
+  logger.error(
     'Missing Supabase environment variables. ' +
-    'Please copy .env.example to .env.local and fill in your Supabase credentials.'
+      'Please copy .env.example to .env.local and fill in your Supabase credentials.'
   )
 }
 

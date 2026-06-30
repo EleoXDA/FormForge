@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "submitButtonText": "Apply",
+    "successMessage": "Application received. We'll be in touch."
+  },
+  "fields": [
+    {
+      "id": "f_name",
+      "type": "text",
+      "name": "full_name",
+      "label": "Full Name",
+      "required": true
+    },
+    {
+      "id": "f_email",
+      "type": "email",
+      "name": "email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "id": "f_phone",
+      "type": "phone",
+      "name": "phone",
+      "label": "Phone"
+    },
+    {
+      "id": "f_role",
+      "type": "select",
+      "name": "role",
+      "label": "Role",
+      "required": true,
+      "options": [
+        { "value": "frontend", "label": "Frontend Engineer" },
+        { "value": "backend", "label": "Backend Engineer" },
+        { "value": "design", "label": "Designer" }
+      ]
+    },
+    {
+      "id": "f_experience",
+      "type": "radio",
+      "name": "experience",
+      "label": "Years of experience",
+      "required": true,
+      "options": [
+        { "value": "junior", "label": "0-2 years" },
+        { "value": "mid", "label": "3-5 years" },
+        { "value": "senior", "label": "6+ years" }
+      ]
+    },
+    {
+      "id": "f_portfolio",
+      "type": "text",
+      "name": "portfolio_url",
+      "label": "Portfolio URL",
+      "helpText": "Shown when applying for a design role",
+      "logic": {
+        "showIf": {
+          "combinator": "and",
+          "conditions": [{ "field": "f_role", "operator": "equals", "value": "design" }]
+        }
+      }
+    },
+    {
+      "id": "f_skills",
+      "type": "checkbox",
+      "name": "skills",
+      "label": "Skills",
+      "options": [
+        { "value": "ts", "label": "TypeScript" },
+        { "value": "vue", "label": "Vue" },
+        { "value": "sql", "label": "SQL" }
+      ]
+    },
+    {
+      "id": "f_start",
+      "type": "date",
+      "name": "start_date",
+      "label": "Available from"
+    },
+    {
+      "id": "f_resume",
+      "type": "file",
+      "name": "resume",
+      "label": "Resume",
+      "accept": ".pdf,.doc,.docx",
+      "maxSizeMb": 5
+    }
+  ]
+}

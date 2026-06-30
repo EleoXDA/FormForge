@@ -290,6 +290,8 @@ onMounted(async () => {
         :columns="tableColumns"
         row-key="id"
         :loading="isLoading"
+        virtual-scroll
+        :rows-per-page-options="[25, 50, 100]"
         flat
         bordered
         @request="onPaginationChange"

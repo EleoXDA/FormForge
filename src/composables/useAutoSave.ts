@@ -1,4 +1,5 @@
 import { ref, onUnmounted, type Ref } from 'vue'
+import { logger } from '@/utils/logger'
 
 export type AutoSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error'
 
@@ -97,7 +98,7 @@ export function useAutoSave(options: UseAutoSaveOptions) {
     } catch (err) {
       status.value = 'error'
       error.value = err instanceof Error ? err.message : 'Save failed'
-      console.error('Auto-save error:', err)
+      logger.error('Auto-save error', err)
     }
   }
 

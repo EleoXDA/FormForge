@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { SchemaRenderer } from '@/components/runtime'
+import { logger } from '@/utils/logger'
 import type { FormSchema } from '@/types'
 
 interface Props {
@@ -36,7 +37,7 @@ watch(
 
 function handlePreviewSubmit(values: Record<string, unknown>) {
   // In preview mode, just log the values
-  console.log('Preview submission:', values)
+  logger.debug('Preview submission', { values })
 }
 </script>
 

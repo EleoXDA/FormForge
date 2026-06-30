@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, provide } from 'vue'
+import { ref, reactive, computed, watch, onMounted, provide, nextTick } from 'vue'
 import type { FormSchema, FormField } from '@/types'
 import { fieldComponentMap } from './fields'
 import { formUploadContextKey, type FormUploadContext } from './uploadContext'
@@ -54,6 +54,14 @@ watch(
 provide(formUploadContextKey, uploadContext)
 
 const rootEl = ref<HTMLElement | null>(null)
+
+// ----- Accessibility: validation error summary -----
+interface ErrorSummaryItem {
+  label: string
+  message: string
+  el: HTMLElement
+}
+const errorSummary = ref<ErrorSummaryItem[]>([])
 
 // ----- Wizard (multi-step) state -----
 const isWizard = computed(() => isMultiStep(props.schema))
@@ -162,6 +170,7 @@ function scrollToTop() {
 
 function goBack() {
   if (currentStepIndex.value > 0) {
+    errorSummary.value = []
     currentStepIndex.value--
     scrollToTop()
   }
@@ -172,6 +181,7 @@ function goBack() {
  * so this advances the wizard or performs the final submission.
  */
 function handleSubmit() {
+  errorSummary.value = []
   if (isWizard.value && !isLastStep.value) {
     currentStepIndex.value++
     scrollToTop()
@@ -179,6 +189,38 @@ function handleSubmit() {
   }
   clearProgress()
   emit('submit', filterVisibleAnswers(props.schema, props.modelValue))
+}
+
+/**
+ * Build an accessible summary of the fields that failed validation so users
+ * (and screen readers) get a single, linkable list of what to fix.
+ */
+async function collectErrors() {
+  await nextTick()
+  const root = rootEl.value
+  if (!root) {
+    errorSummary.value = []
+    return
+  }
+  const erroredFields = Array.from(root.querySelectorAll('.q-field--error')) as HTMLElement[]
+  errorSummary.value = erroredFields.map((el) => {
+    const label = el.querySelector('.q-field__label')?.textContent?.trim() || 'This field'
+    const message =
+      el.querySelector('.q-field__messages [role="alert"]')?.textContent?.trim() ||
+      el.querySelector('.q-field__messages')?.textContent?.trim() ||
+      'Please review this field'
+    return { label, message, el }
+  })
+}
+
+function onValidationError() {
+  void collectErrors()
+}
+
+function focusError(item: ErrorSummaryItem) {
+  item.el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const control = item.el.querySelector('input, textarea, select') as HTMLElement | null
+  control?.focus()
 }
 
 // ----- Local progress persistence (opt-in via storageKey) -----
@@ -237,7 +279,28 @@ watch(() => [props.modelValue, currentStepIndex.value], persistProgress, { deep:
 
 <template>
   <div ref="rootEl" class="schema-renderer-root">
-    <q-form class="schema-renderer" @submit.prevent="handleSubmit">
+    <q-form class="schema-renderer" @submit.prevent="handleSubmit" @validation-error="onValidationError">
+      <!-- Accessible validation error summary -->
+      <q-banner
+        v-if="errorSummary.length > 0"
+        role="alert"
+        dense
+        rounded
+        class="q-mb-md bg-red-1 text-negative ff-error-summary"
+      >
+        <div class="text-weight-medium q-mb-xs">
+          Please fix {{ errorSummary.length }}
+          {{ errorSummary.length === 1 ? 'error' : 'errors' }} below:
+        </div>
+        <ul class="q-my-none q-pl-md">
+          <li v-for="(item, index) in errorSummary" :key="index">
+            <a href="#" class="text-negative" @click.prevent="focusError(item)">
+              {{ item.label }}: {{ item.message }}
+            </a>
+          </li>
+        </ul>
+      </q-banner>
+
       <!-- Wizard progress header -->
       <div v-if="isWizard && totalSteps > 1" class="wizard-progress q-mb-md">
         <div class="row items-center justify-between q-mb-xs">

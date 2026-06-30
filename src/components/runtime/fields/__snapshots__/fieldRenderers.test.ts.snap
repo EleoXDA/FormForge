@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`field renderers > DateFieldRenderer > matches the rendered snapshot 1`] = `"<q-input-stub model-value="" label="Start date" error="false" outlined="" mask="####-##-##"></q-input-stub>"`;
+
+exports[`field renderers > SelectFieldRenderer > matches the rendered snapshot 1`] = `"<q-select-stub model-value="" label="Role" error="false" options="[object Object],[object Object]" option-value="value" option-label="label" emit-value="" map-options="" outlined=""></q-select-stub>"`;
+
+exports[`field renderers > TextFieldRenderer > matches the rendered snapshot 1`] = `"<q-input-stub model-value="" label="Full Name" error="false" rules="(v) => !!v || &quot;This field is required&quot;" outlined=""></q-input-stub>"`;

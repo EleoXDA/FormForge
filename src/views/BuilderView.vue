@@ -15,6 +15,7 @@ import {
 } from '@/components/builder'
 import { PropertyInspector } from '@/components/builder/inspector'
 import { useBuilderKeyboard, useAutoSave } from '@/composables'
+import { logger } from '@/utils/logger'
 import type { FormField, FormSchema, FormMeta } from '@/types'
 
 const route = useRoute()
@@ -181,6 +182,7 @@ async function handlePublish() {
     if (store.meta) {
       store.meta.status = 'published'
     }
+    logger.event('form_published', { formId: store.meta?.id, slug: store.meta?.slug })
     $q.notify({
       type: 'positive',
       message: 'Form published successfully!'

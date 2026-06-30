@@ -31,7 +31,22 @@ config.global.stubs = {
   'q-toggle': true,
   'q-select': true,
   'q-checkbox': true,
-  'q-option-group': true
+  'q-option-group': true,
+  // Runtime renderer components
+  'q-form': true,
+  'q-field': true,
+  'q-space': true,
+  'q-banner': true,
+  'q-linear-progress': true,
+  'q-file': true,
+  'q-date': true,
+  'q-popup-proxy': true
+}
+
+// No-op directives so component tests don't warn about Quasar directives.
+config.global.directives = {
+  'close-popup': {},
+  ripple: {}
 }
 
 // Reset all mocks after each test
